@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pack'n Go | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root { --accent: #e63946; --dark: #000; --bg: #fafafa; --done: #1db954; --process: #f39c12; --fail: #e63946; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; color: var(--dark); overflow-x: hidden; }
+        .wrapper { max-width: 500px; margin: auto; }
+        
+        header { 
+            text-align: center; background: var(--dark); color: white; padding: 55px 15px; 
+            border-bottom: 8px solid var(--accent); 
+        }
+        header h1 { font-size: 1.5rem; letter-spacing: 5px; text-transform: uppercase; margin: 0; }
+        header p { font-size: 0.65rem; letter-spacing: 2px; margin-top: 2px; text-transform: uppercase; opacity: 0.9; }
+        
+        .container { padding: 15px; padding-bottom: 80px; width: 100%; }
+        .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #eee; width: 100%; }
+        
+        input, select { 
+            width: 100%; display: block; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; 
+            border-radius: 4px; font-family: inherit; font-size: 0.85rem; appearance: none; -webkit-appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e63946' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px;
+            padding-right: 40px;
+            background-color: #fff;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 6px;
+            font-family: inherit; font-size: 0.75rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); filter: brightness(1.1); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-black { background: var(--dark); color: white; }
+        .btn-red { background: var(--accent); color: white; }
+        .btn-orange { background: var(--process); color: white; }
+        .btn-green { background: var(--done); color: white; }
+
+        .session-badge { 
+            display: flex; background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 6px solid var(--accent);
+        }
+        .session-info { display: flex; flex-direction: column; gap: 5px; }
+        .session-label { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; color: var(--dark); }
+        .session-count { font-size: 0.75rem; color: #555; font-weight: 600; }
+        
+        .logout-link { 
+            font-size: 0.7rem; color: var(--fail); cursor: pointer; text-transform: uppercase; 
+            font-weight: 700; border: 1.5px solid var(--fail); padding: 6px 10px; border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .logout-link:hover { background: var(--fail); color: white; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(230, 57, 70, 0.2); }
+
+        .nav-admin { display: flex; background: #eee; gap: 2px; width: 100%; }
+        .nav-btn { flex: 1; padding: 12px; border: none; background: #ddd; font-size: 0.55rem; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .nav-btn:hover:not(.active) { background: #f5f5f5; color: var(--accent); }
+        .nav-btn.active { background: #fff; border-bottom: 3px solid var(--accent); }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-left: 3px solid var(--accent); padding-left: 8px; }
+        .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .statut-pill { 
+            display: inline-block; min-width: 75px; text-align: center;
+            font-size: 0.55rem; padding: 4px 0; border-radius: 4px; 
+            font-weight: 800; text-transform: uppercase; border: 1px solid transparent;
+        }
+        .s-attente { background: #eee; color: #666; border-color: #ddd; }
+        .s-cours { background: #fff3e0; color: var(--process); border-color: #ffe0b2; } 
+        .s-livre { background: #e8f5e9; color: var(--done); border-color: #c8e6c9; }
+        .s-echec { background: #ffebee; color: var(--fail); border-color: #ffcdd2; }
+
+        .suivi-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
+        .suivi-info { display: flex; flex-direction: column; gap: 2px; }
+        .suivi-client { font-size: 0.85rem; font-weight: 700; text-transform: capitalize; }
+        .suivi-sub { font-size: 0.65rem; color: #777; font-weight: 500; }
+
+        .detail-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 2px solid var(--dark); margin-top: 25px; margin-bottom: 10px; }
+        .detail-name { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; }
+        .count-number { font-size: 0.85rem; font-weight: 800; background: var(--accent); color: white; min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+
+        .fin-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; table-layout: fixed; margin-top: 10px; }
+        .fin-table th { padding: 10px 2px; color: #888; border-bottom: 1px solid #eee; text-align: center; text-transform: uppercase; }
+        .fin-table td { padding: 12px 2px; border-bottom: 1px solid #f9f9f9; text-align: center; font-weight: 700; }
+        .total-row { background: var(--dark); color: #fff; }
+        
+        .user-tag { display: grid; grid-template-columns: 140px 1fr auto; gap: 15px; align-items: center; padding: 12px 10px; background: #f9f9f9; margin-bottom: 5px; border-radius: 4px; font-size: 0.85rem; } 
+        .hidden { display: none !important; }
+        .admin-trigger { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--dark); color: #fff; padding: 10px 20px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; }
+        .admin-trigger:hover { background: var(--accent); }
+        
+        .livreur-line { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 10px; align-items: center; }
+        .livreur-client-name { font-size: 0.85rem; font-weight: 700; }
+        .livreur-loc { color: var(--dark); font-weight: 700; font-size: 0.85rem; }
+
+        .compta-detail-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.7rem; display: flex; justify-content: space-between; }
+        
+        @media print { .no-print { display: none !important; } .card { box-shadow: none; border: 1px solid #000; } body { background: #fff; } .container { padding: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <header>
+        <h1>pack'n go</h1>
+        <p>votre colis, notre mission</p>
+    </header>
+
+    <div class="container">
+        <div id="sessionStatus"></div> 
+
+        <div id="sectionLivreur">
+            <div class="card" id="loginCard">
+                <div class="section-header"><div class="section-title">Espace Travail</div></div>
+                <select id="loginLivreur" onchange="connexionLivreur()">
+                    <option value="Tous">-- IDENTIFIEZ-VOUS --</option>
+                </select>
+            </div>
+            <div id="listeCoursesLivreur"></div>
+        </div>
+
+        <div id="sectionAdmin" class="hidden">
+            <nav class="nav-admin no-print">
+                <button class="nav-btn active" onclick="switchTab('tabCourses')">Courses</button>
+                <button class="nav-btn" onclick="switchTab('tabCompta')">Comptabilité</button>
+                <button id="btnNavRH" class="nav-btn" onclick="switchTab('tabRH')">Ressources H.</button>
+            </nav>
+
+            <div id="tabCourses" class="tab-content">
+                <div class="card no-print">
+                    <div class="section-header"><div class="section-title">Gestion Course</div></div>
+                    <input type="text" id="c_client" placeholder="CLIENT">
+                    <input type="text" id="c_dest" placeholder="DESTINATION">
+                    <div style="display: flex; gap:10px;">
+                        <input type="number" id="c_tarif" placeholder="TARIF" step="500">
+                        <input type="time" id="c_heure">
+                    </div>
+                    <select id="c_livreur"></select>
+                    <div id="formActionContainer">
+                        <button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <div class="section-title">Suivi Live</div>
+                        <div id="countCourses" style="font-size: 0.6rem; background: #eee; padding: 2px 8px; border-radius: 10px; color: #666; font-weight: 700;">0</div>
+                    </div>
+                    <div id="suiviLive"></div>
+                </div>
+            </div>
+
+            <div id="tabCompta" class="tab-content hidden">
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Bilan Financier Global</div></div>
+                    <div class="filter-grid no-print" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <select id="typeFiltre" onchange="renderCompta()">
+                            <option value="jour">JOUR</option>
+                            <option value="semaine">SEMAINE</option>
+                            <option value="mois">MOIS</option>
+                        </select>
+                        <input type="date" id="dateRef" onchange="renderCompta()">
+                    </div>
+                    <div id="tableComptaContainer"></div>
+                </div>
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Détails par Livreur</div></div>
+                    <div id="detailsComptaContainer"></div>
+                    <button class="btn btn-red no-print" style="margin-top: 15px;" onclick="window.print()">IMPRIMER LE RAPPORT</button>
+                </div>
+            </div>
+
+            <div id="tabRH" class="tab-content hidden">
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Ajouter un Membre</div></div>
+                    <input type="text" id="rh_nom" placeholder="NOM COMPLET">
+                    <input type="password" id="rh_code" placeholder="CODE SECRET">
+                    <select id="rh_role">
+                        <option value="" disabled selected>-- CHOISIR LE RÔLE --</option>
+                        <option value="livreur_packngo">Livreur Pack'n Go</option>
+                        <option value="livreur_externe">Livreur Externe</option>
+                        <option value="admin">Administrateur Adjoint</option>
+                    </select>
+                    <button class="btn btn-black" onclick="ajouterRH()">ENREGISTRER</button>
+                </div>
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Liste du personnel</div></div>
+                    <div id="listeRH"></div>
+                </div>
+                <div id="logsContainer" class="card hidden">
+                    <div class="section-header"><div class="section-title">Journal d'activités (Logs)</div></div>
+                    <div id="listeLogs" style="font-size: 0.65rem; max-height: 250px; overflow-y: auto; font-family: monospace;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-trigger no-print" onclick="authAdmin()" id="btnAdmin">ACCÈS ADMIN</div>
+    </div>
+</div>
+
+<script>
+    // CONFIGURATION FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk",
+        authDomain: "pack-n-go-app.firebaseapp.com",
+        databaseURL: "https://pack-n-go-app-default-rtdb.firebaseio.com",
+        projectId: "pack-n-go-app",
+        storageBucket: "pack-n-go-app.firebasestorage.app",
+        messagingSenderId: "440398074655",
+        appId: "1:440398074655:web:69ed87e2566fab0d50562a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let courses = [];
+    let staff = {};
+    let logs = [];
+    let userSession = "Deconnecte";
+    let activeAdminName = ""; 
+    let isAdminMode = false;
+    let isAdminPrincipal = false;
+
+    document.getElementById('dateRef').valueAsDate = new Date();
+
+    // ÉCOUTE FIREBASE EN TEMPS RÉEL
+    db.ref('staff').on('value', snap => {
+        staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } };
+        refreshAll();
+    });
+
+    db.ref('courses').on('value', snap => {
+        courses = [];
+        snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); });
+        refreshAll();
+    });
+
+    db.ref('logs').limitToFirst(50).on('value', snap => {
+        logs = [];
+        snap.forEach(child => { logs.unshift(child.val()); });
+        refreshAll();
+    });
+
+    function tracerAction(action) {
+        const entry = { date: new Date().toLocaleString('fr-FR'), auteur: activeAdminName || "Système", details: action };
+        db.ref('logs').push(entry);
+    }
+
+    function authAdmin() {
+        if(isAdminMode) { location.reload(); } else {
+            let p = prompt("CODE ACCÈS :"); if(!p) return;
+            if(p === "0612") { isAdminPrincipal = true; activeAdminName = "Admin Principal"; isAdminMode = true; document.getElementById('btnNavRH').classList.remove('hidden'); }
+            else {
+                let found = Object.keys(staff).find(u => staff[u].mdp === p && staff[u].role === 'admin');
+                if(found) { isAdminPrincipal = false; activeAdminName = found; isAdminMode = true; document.getElementById('btnNavRH').classList.add('hidden'); }
+                else { alert("Accès refusé"); return; }
+            }
+            document.getElementById('sectionAdmin').classList.remove('hidden');
+            document.getElementById('sectionLivreur').classList.add('hidden');
+            document.getElementById('btnAdmin').innerText = "DÉCONNEXION";
+            refreshAll();
+        }
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.remove('hidden');
+        event.currentTarget.classList.add('active');
+        refreshAll();
+    }
+
+    function ajouterRH() {
+        const n = document.getElementById('rh_nom').value.trim(), c = document.getElementById('rh_code').value, r = document.getElementById('rh_role').value;
+        if(n && c && r) {
+            db.ref('staff/' + n).set({ mdp: c, role: r });
+            tracerAction(`Ajout personnel : ${n}`);
+            document.getElementById('rh_nom').value = ''; document.getElementById('rh_code').value = '';
+        }
+    }
+
+    function supprRH(n) { 
+        if(confirm(`Supprimer ${n} ?`)) { 
+            db.ref('staff/' + n).remove();
+            tracerAction(`Suppression personnel : ${n}`); 
+        } 
+    }
+
+    function creerCourse() {
+        const c = document.getElementById('c_client').value, t = document.getElementById('c_tarif').value, d = document.getElementById('c_dest').value, l = document.getElementById('c_livreur').value, h = document.getElementById('c_heure').value;
+        if(c && t) {
+            db.ref('courses').push({ 
+                date: new Date().toISOString().split('T')[0], 
+                client: c, dest: d, tarif: parseInt(t), 
+                livreur: l, heure: h, statut: 'Attente', modifiee: false 
+            });
+            tracerAction(`Création course : ${c}`);
+            annulerModif();
+        }
+    }
+
+    function modifierCourse(id) {
+        let c = courses.find(item => item.id === id); if(!c) return;
+        document.getElementById('c_client').value = c.client; document.getElementById('c_dest').value = c.dest;
+        document.getElementById('c_tarif').value = c.tarif; document.getElementById('c_livreur').value = c.livreur;
+        document.getElementById('c_heure').value = c.heure || "";
+        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-orange" onclick="sauvegarderModif('${id}')">METTRE À JOUR</button><button class="btn btn-black" style="background:#888" onclick="annulerModif()">ANNULER</button>`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function sauvegarderModif(id) {
+        const clientNom = document.getElementById('c_client').value;
+        let c = courses.find(item => item.id === id);
+        let nouveauStatut = (c.statut === 'Non Livré') ? 'Attente' : c.statut;
+        
+        db.ref('courses/' + id).update({
+            client: clientNom, 
+            dest: document.getElementById('c_dest').value, 
+            tarif: parseInt(document.getElementById('c_tarif').value), 
+            livreur: document.getElementById('c_livreur').value, 
+            heure: document.getElementById('c_heure').value,
+            statut: nouveauStatut,
+            modifiee: true
+        });
+        
+        tracerAction(`Modif/Reprog course : ${clientNom}`); 
+        annulerModif();
+    }
+
+    function annulerModif() {
+        document.getElementById('c_client').value = ''; document.getElementById('c_dest').value = ''; document.getElementById('c_tarif').value = ''; document.getElementById('c_heure').value = '';
+        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>`;
+        refreshAll();
+    }
+
+    function supprimerCourse(id) { 
+        if(confirm("Supprimer cette course ?")) { 
+            db.ref('courses/' + id).remove();
+        } 
+    }
+
+    function connexionLivreur() {
+        const s = document.getElementById('loginLivreur'); if(s.value === "Tous") { userSession = "Deconnecte"; refreshAll(); return; }
+        if(prompt(`CODE ${s.value} :`) === staff[s.value].mdp) {
+            userSession = s.value;
+            refreshAll();
+        } else {
+            s.value = "Tous"; refreshAll();
+        }
+    }
+
+    function deconnexion() { if(isAdminMode) location.reload(); else { userSession = "Deconnecte"; document.getElementById('loginLivreur').value = "Tous"; refreshAll(); } }
+
+    function changerStatut(id, s) {
+        if(confirm("Confirmer le statut ?")) {
+            db.ref('courses/' + id).update({ statut: s });
+        }
+    }
+
+    function refreshAll() {
+        const l_rh = document.getElementById('listeRH'), s_rh = document.getElementById('c_livreur'), s_log = document.getElementById('loginLivreur'), live = document.getElementById('suiviLive'), l_liv = document.getElementById('listeCoursesLivreur'), statusArea = document.getElementById('sessionStatus'), logCard = document.getElementById('loginCard');
+        const aujourdhui = new Date().toISOString().split('T')[0];
+        
+        if(l_rh) l_rh.innerHTML = ''; 
+        s_rh.innerHTML = '<option>NON ASSIGNÉ</option>'; 
+        s_log.innerHTML = '<option value="Tous">-- IDENTIFIEZ-VOUS --</option>'; 
+        live.innerHTML = ''; l_liv.innerHTML = '';
+
+        if(isAdminMode) {
+            const nomAffiché = (activeAdminName === "Admin Principal") ? activeAdminName : `ADMIN : ${activeAdminName}`;
+            statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${nomAffiché}</span><span class="session-count">Contrôle Dashboard</span></div></div>`;
+            logCard.classList.add('hidden');
+        } else if(userSession !== "Deconnecte") {
+            const score = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === aujourdhui).length;
+            statusArea.innerHTML = `
+                <div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="session-info" style="text-align: left; align-items: flex-start;">
+                        <span class="session-label">LIVREUR : ${userSession}</span>
+                        <span class="session-count">Livrée(s) aujourd'hui : ${score}</span>
+                    </div>
+                    <span class="logout-link" onclick="deconnexion()" style="margin-top: 0;">Déconnexion</span>
+                </div>`;
+            logCard.classList.add('hidden');
+        } else { statusArea.innerHTML = ''; logCard.classList.remove('hidden'); }
+
+        for(let u in staff) {
+            if(u === "Admin") continue;
+            let rLabel = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe');
+            if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rLabel}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`;
+            if(staff[u].role.startsWith('livreur')) { s_rh.innerHTML += `<option value="${u}">${u}</option>`; s_log.innerHTML += `<option value="${u}">${u}</option>`; }
+        }
+        
+        document.getElementById('countCourses').innerText = courses.length;
+
+        courses.forEach(c => {
+            let sClass = c.statut === 'Livré' ? 's-livre' : (c.statut === 'En cours' ? 's-cours' : (c.statut === 'Non Livré' ? 's-echec' : 's-attente'));
+            let hLabel = c.heure ? `<span style="color:var(--accent); margin-left:8px;">${c.heure}</span>` : '';
+            let modIcon = c.modifiee ? `<span style="margin-right:5px; font-size:0.8rem; color:var(--process)" title="Course modifiée/reprogrammée">🔄</span>` : "";
+
+            let actions = (isAdminMode && c.statut !== 'Livré') ? 
+                `<div style="display: flex; gap: 10px; margin-left: 10px; font-size: 1rem; align-items: center;">
+                    <span onclick="modifierCourse('${c.id}')" style="cursor:pointer;" title="Modifier">📝</span>
+                    <span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;" title="Supprimer">🗑️</span>
+                </div>` : '';
+            
+            live.innerHTML += `
+                <div class="suivi-row">
+                    <div class="suivi-info">
+                        <span class="suivi-client">${c.client}${hLabel}</span>
+                        <span class="suivi-sub">${c.livreur} • ${c.tarif} F</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        ${modIcon}
+                        <span class="statut-pill ${sClass}">${c.statut}</span>
+                        ${actions}
+                    </div>
+                </div>`;
+            
+            if(userSession !== "Deconnecte" && c.livreur === userSession && c.statut !== 'Livré' && c.statut !== 'Non Livré') {
+                let content = `<div class="livreur-line"><span class="livreur-client-name">${c.client}${c.heure ? '<span style="color:var(--accent);margin-left:5px">'+c.heure+'</span>' : ''}</span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
+                content += (c.statut === 'Attente') ? `<button class="btn btn-orange" onclick="changerStatut('${c.id}', 'En cours')">ACCEPTER LA COURSE</button>` : `<div style="display:flex; gap:10px;"><button class="btn btn-green" style="flex:2" onclick="changerStatut('${c.id}', 'Livré')">LIVRÉ</button><button class="btn btn-red" style="flex:1" onclick="changerStatut('${c.id}', 'Non Livré')">ÉCHEC</button></div>`;
+                l_liv.innerHTML += `<div class="card">${content}</div>`;
+            }
+        });
+
+        if (isAdminPrincipal && !document.getElementById('tabRH').classList.contains('hidden')) {
+            document.getElementById('logsContainer').classList.remove('hidden');
+            document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #eee;"><span style="color:var(--accent)">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
+        } else { document.getElementById('logsContainer').classList.add('hidden'); }
+        renderCompta();
+    }
+
+    function renderCompta() {
+        const type = document.getElementById('typeFiltre').value, ref = new Date(document.getElementById('dateRef').value);
+        let bilan = {}, details = {}, counts = {};
+        courses.filter(c => c.statut === 'Livré').forEach(c => {
+            const d = new Date(c.date);
+            if((type === 'jour' && d.toDateString() === ref.toDateString()) || (type === 'semaine' && (ref - d) / 86400000 < 7 && (ref - d) >= 0) || (type === 'mois' && d.getMonth() === ref.getMonth() && d.getFullYear() === ref.getFullYear())) {
+                bilan[c.livreur] = (bilan[c.livreur] || 0) + c.tarif;
+                counts[c.livreur] = (counts[c.livreur] || 0) + 1;
+                if(!details[c.livreur]) details[c.livreur] = []; details[c.livreur].push(c);
+            }
+        });
+
+        let h = `<table class="fin-table"><tr><th>NOM</th><th>TOTAL</th><th>GAINS</th><th>P'GO</th></tr>`, tT=0, tG=0, tP=0;
+        for(let n in bilan) {
+            let pP = (staff[n] && staff[n].role === 'livreur_packngo') ? Math.round(bilan[n]*0.7) : Math.round(bilan[n]*0.3);
+            let pL = bilan[n] - pP; tT+=bilan[n]; tG+=pL; tP+=pP;
+            h += `<tr><td>${n}</td><td>${bilan[n]}</td><td style="color:var(--done)">${pL}</td><td>${pP}</td></tr>`;
+        }
+        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bilan).length ? h + `<tr class="total-row"><td>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr></table>` : "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
+
+        let detH = "";
+        for(let n in details) {
+            detH += `<div style="margin-bottom:25px;"><div class="detail-header"><span class="detail-name">${n}</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:0.6rem;font-weight:700;color:#777;text-transform:uppercase;">Courses</span><span class="count-number">${counts[n]}</span></div></div>`;
+            details[n].forEach(c => { 
+                detH += `<div class="compta-detail-row"><span><b style="color:var(--dark);">${c.client}</b> (📍${c.dest})</span><b>${c.tarif} F</b></div>`; 
+            });
+            detH += `</div>`;
+        }
+        document.getElementById('detailsComptaContainer').innerHTML = detH || "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
+    }
+</script>
+</body>
+</html>
