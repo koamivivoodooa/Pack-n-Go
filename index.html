@@ -120,6 +120,9 @@
 
         .compta-detail-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.7rem; display: flex; justify-content: space-between; }
         
+        /* Correction espacement icône mise à jour */
+        .icon-update { font-size: 0.75rem; margin-right: 8px; }
+
         @media print { .no-print { display: none !important; } .card { box-shadow: none; border: 1px solid #000; } body { background: #fff; } .container { padding: 0; } }
     </style>
 </head>
@@ -238,7 +241,6 @@
 
     document.getElementById('dateRef').valueAsDate = new Date();
     
-    // Écouteur ultra-réactif pour le staff
     db.ref('staff').on('value', snap => { 
         staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } }; 
         if(isAdminMode) {
@@ -257,31 +259,25 @@
             nettoyerLogsAutomatique();
         }
         refreshAll(); 
-    }, { onlyOnce: false }); // On force l'écoute continue
+    });
 
     db.ref('courses').on('value', snap => { courses = []; snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); }); refreshAll(); });
     db.ref('logs').limitToLast(50).on('value', snap => { logs = []; snap.forEach(child => { logs.unshift(child.val()); }); refreshAll(); });
 
     function authAdmin() {
         if(isAdminMode) { localStorage.clear(); location.reload(); return; }
-        
         let p = prompt("CODE ACCÈS :"); 
         if(!p) return;
-
-        // Validation immédiate
         if(p === "0612") { 
             localStorage.setItem('png_admin', JSON.stringify({name: "Admin Principal", isPrincipal: true}));
             location.reload();
         } else {
-            // On vérifie directement dans l'objet 'staff' déjà chargé en mémoire
             let userKey = Object.keys(staff).find(k => staff[k].mdp === p && staff[k].role === 'admin');
             if(userKey) {
                 localStorage.setItem('png_admin', JSON.stringify({name: userKey, isPrincipal: false}));
                 localStorage.removeItem('png_livreur');
                 location.reload();
-            } else {
-                alert("Accès refusé ou données non chargées. Réessayez dans 1 seconde.");
-            }
+            } else { alert("Accès refusé."); }
         }
     }
 
@@ -348,7 +344,7 @@
                 tC++;
                 let sC = c.statut === 'Livré' ? 's-livre' : (c.statut === 'En cours' ? 's-cours' : (c.statut === 'Non Livré' ? 's-echec' : 's-attente'));
                 let act = (isAdminMode && c.statut !== 'Livré') ? `<div style="display: flex; gap: 10px; margin-left: 10px; font-size: 1rem; align-items: center;"><span onclick="modifierCourse('${c.id}')" style="cursor:pointer;">📝</span><span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;">🗑️</span></div>` : '';
-                live.innerHTML += `<div class="suivi-row"><div class="suivi-info"><span class="suivi-client">${c.client} <span style="color:var(--accent); margin-left:8px;">${c.heure||''}</span></span><span class="suivi-sub">${c.livreur} • ${c.tarif} F</span></div><div style="display: flex; align-items: center;">${c.modifiee?'🔄':''}<span class="statut-pill ${sC}">${c.statut}</span>${act}</div></div>`;
+                live.innerHTML += `<div class="suivi-row"><div class="suivi-info"><span class="suivi-client">${c.client} <span style="color:var(--accent); margin-left:8px;">${c.heure||''}</span></span><span class="suivi-sub">${c.livreur} • ${c.tarif} F</span></div><div style="display: flex; align-items: center;">${c.modifiee?'<span class="icon-update">🔄</span>':''}<span class="statut-pill ${sC}">${c.statut}</span>${act}</div></div>`;
             }
             if(userSession !== "Deconnecte" && c.livreur === userSession && c.statut !== 'Livré' && c.statut !== 'Non Livré') {
                 let ct = `<div class="livreur-line"><span class="livreur-client-name">${c.client} <span style="color:var(--accent); margin-left:7px">${c.tarif}F</span></span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
