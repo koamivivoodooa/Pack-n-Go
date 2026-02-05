@@ -19,8 +19,11 @@
     <style>
         :root { --accent: #e63946; --dark: #000; --bg: #fafafa; --done: #1db954; --process: #f39c12; --fail: #e63946; }
         * { box-sizing: border-box; }
+        
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; color: var(--dark); overflow-x: hidden; }
-        .wrapper { max-width: 500px; margin: auto; }
+        
+        .wrapper { max-width: 1000px; margin: auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        @media (max-width: 600px) { .wrapper { max-width: 500px; } }
         
         header { 
             text-align: center; background: var(--dark); padding: 15px; 
@@ -219,64 +222,59 @@
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk",
-        authDomain: "pack-n-go-app.firebaseapp.com",
-        databaseURL: "https://pack-n-go-app-default-rtdb.firebaseio.com",
-        projectId: "pack-n-go-app",
-        storageBucket: "pack-n-go-app.firebasestorage.app",
-        messagingSenderId: "440398074655",
-        appId: "1:440398074655:web:69ed87e2566fab0d50562a"
-    };
+    // --- PARTIE 1 : RESTAURATION SANS FLASH ---
+    const savedAdmin = localStorage.getItem('png_admin');
+    const savedLivreur = localStorage.getItem('png_livreur');
+    const savedTab = localStorage.getItem('png_tab');
 
+    // Config Firebase
+    const firebaseConfig = { apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk", authDomain: "pack-n-go-app.firebaseapp.com", databaseURL: "https://pack-n-go-app-default-rtdb.firebaseio.com", projectId: "pack-n-go-app", storageBucket: "pack-n-go-app.firebasestorage.app", messagingSenderId: "440398074655", appId: "1:440398074655:web:69ed87e2566fab0d50562a" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let courses = [];
-    let staff = {};
-    let logs = [];
-    let userSession = "Deconnecte";
-    let activeAdminName = ""; 
-    let isAdminMode = false;
-    let isAdminPrincipal = false;
+    let courses = [], staff = {}, logs = [], userSession = "Deconnecte", activeAdminName = "", isAdminMode = false, isAdminPrincipal = false;
 
+    // Rétablissement immédiat des variables avant le chargement des données
+    if(savedAdmin) {
+        const d = JSON.parse(savedAdmin); isAdminMode = true; isAdminPrincipal = d.isPrincipal; activeAdminName = d.name;
+    } else if(savedLivreur) { userSession = savedLivreur; }
+
+    // --- PARTIE 2 : LOGIQUE FIREBASE ---
     document.getElementById('dateRef').valueAsDate = new Date();
-
-    db.ref('staff').on('value', snap => {
-        staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } };
-        refreshAll();
-    });
-
-    db.ref('courses').on('value', snap => {
-        courses = [];
-        snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); });
-        refreshAll();
-    });
-
-    db.ref('logs').limitToFirst(50).on('value', snap => {
-        logs = [];
-        snap.forEach(child => { logs.unshift(child.val()); });
-        refreshAll();
-    });
-
-    function tracerAction(action) {
-        const entry = { date: new Date().toLocaleString('fr-FR'), auteur: activeAdminName || "Système", details: action };
-        db.ref('logs').push(entry);
-    }
-
-    function authAdmin() {
-        if(isAdminMode) { location.reload(); } else {
-            let p = prompt("CODE ACCÈS :"); if(!p) return;
-            if(p === "0612") { isAdminPrincipal = true; activeAdminName = "Admin Principal"; isAdminMode = true; document.getElementById('btnNavRH').classList.remove('hidden'); }
-            else {
-                let found = Object.keys(staff).find(u => staff[u].mdp === p && staff[u].role === 'admin');
-                if(found) { isAdminPrincipal = false; activeAdminName = found; isAdminMode = true; document.getElementById('btnNavRH').classList.add('hidden'); }
-                else { alert("Accès refusé"); return; }
-            }
+    db.ref('staff').on('value', snap => { 
+        staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } }; 
+        if(isAdminMode) {
             document.getElementById('sectionAdmin').classList.remove('hidden');
             document.getElementById('sectionLivreur').classList.add('hidden');
             document.getElementById('btnAdmin').innerText = "DÉCONNEXION";
-            refreshAll();
+            if(!isAdminPrincipal) document.getElementById('btnNavRH').classList.add('hidden');
+            if(savedTab) {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(savedTab).classList.remove('hidden');
+                const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(savedTab));
+                if(btn) btn.classList.add('active');
+            }
+        }
+        refreshAll(); 
+    });
+
+    db.ref('courses').on('value', snap => { courses = []; snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); }); refreshAll(); });
+    db.ref('logs').limitToFirst(50).on('value', snap => { logs = []; snap.forEach(child => { logs.unshift(child.val()); }); refreshAll(); });
+
+    // --- PARTIE 3 : TES FONCTIONS ORIGINALES ---
+    function authAdmin() {
+        if(isAdminMode) { localStorage.clear(); location.reload(); } else {
+            let p = prompt("CODE ACCÈS :"); if(!p) return;
+            if(p === "0612") { isAdminPrincipal = true; activeAdminName = "Admin Principal"; isAdminMode = true; } 
+            else {
+                let found = Object.keys(staff).find(u => staff[u].mdp === p && staff[u].role === 'admin');
+                if(found) { isAdminPrincipal = false; activeAdminName = found; isAdminMode = true; }
+                else { alert("Accès refusé"); return; }
+            }
+            localStorage.setItem('png_admin', JSON.stringify({name: activeAdminName, isPrincipal: isAdminPrincipal}));
+            localStorage.removeItem('png_livreur');
+            location.reload();
         }
     }
 
@@ -285,212 +283,83 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.remove('hidden');
         event.currentTarget.classList.add('active');
-        refreshAll();
-    }
-
-    function ajouterRH() {
-        const n = document.getElementById('rh_nom').value.trim(), c = document.getElementById('rh_code').value, r = document.getElementById('rh_role').value;
-        if(n && c && r) {
-            db.ref('staff/' + n).set({ mdp: c, role: r });
-            tracerAction(`Ajout personnel : ${n}`);
-            document.getElementById('rh_nom').value = ''; document.getElementById('rh_code').value = '';
-        }
-    }
-
-    function supprRH(n) { 
-        if(confirm(`Supprimer ${n} ?`)) { 
-            db.ref('staff/' + n).remove();
-            tracerAction(`Suppression personnel : ${n}`); 
-        } 
-    }
-
-    function creerCourse() {
-        const c = document.getElementById('c_client').value, t = document.getElementById('c_tarif').value, d = document.getElementById('c_dest').value, l = document.getElementById('c_livreur').value, h = document.getElementById('c_heure').value;
-        if(c && t) {
-            db.ref('courses').push({ 
-                date: new Date().toISOString().split('T')[0], 
-                client: c, dest: d, tarif: parseInt(t), 
-                livreur: l, heure: h, statut: 'Attente', modifiee: false 
-            });
-            tracerAction(`Création course : ${c}`);
-            annulerModif();
-        }
-    }
-
-    function modifierCourse(id) {
-        let c = courses.find(item => item.id === id); if(!c) return;
-        document.getElementById('c_client').value = c.client; document.getElementById('c_dest').value = c.dest;
-        document.getElementById('c_tarif').value = c.tarif; document.getElementById('c_livreur').value = c.livreur;
-        document.getElementById('c_heure').value = c.heure || "";
-        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-orange" onclick="sauvegarderModif('${id}')">METTRE À JOUR</button><button class="btn btn-black" style="background:#888" onclick="annulerModif()">ANNULER</button>`;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function sauvegarderModif(id) {
-        const clientNom = document.getElementById('c_client').value;
-        let c = courses.find(item => item.id === id);
-        let nouveauStatut = (c.statut === 'Non Livré') ? 'Attente' : c.statut;
-        
-        db.ref('courses/' + id).update({
-            client: clientNom, 
-            dest: document.getElementById('c_dest').value, 
-            tarif: parseInt(document.getElementById('c_tarif').value), 
-            livreur: document.getElementById('c_livreur').value, 
-            heure: document.getElementById('c_heure').value,
-            statut: nouveauStatut,
-            modifiee: true
-        });
-        
-        tracerAction(`Modif/Reprog course : ${clientNom}`); 
-        annulerModif();
-    }
-
-    function annulerModif() {
-        document.getElementById('c_client').value = ''; document.getElementById('c_dest').value = ''; document.getElementById('c_tarif').value = ''; document.getElementById('c_heure').value = '';
-        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>`;
-        refreshAll();
-    }
-
-    function supprimerCourse(id) { 
-        if(confirm("Supprimer cette course ?")) { 
-            db.ref('courses/' + id).remove();
-        } 
+        if(isAdminMode) localStorage.setItem('png_tab', tabId);
     }
 
     function connexionLivreur() {
-        const s = document.getElementById('loginLivreur'); if(s.value === "Tous") { userSession = "Deconnecte"; refreshAll(); return; }
+        const s = document.getElementById('loginLivreur'); if(s.value === "Tous") return;
         if(prompt(`CODE ${s.value} :`) === staff[s.value].mdp) {
-            userSession = s.value;
-            refreshAll();
-        } else {
-            s.value = "Tous"; refreshAll();
-        }
+            userSession = s.value; localStorage.setItem('png_livreur', userSession); refreshAll();
+        } else { s.value = "Tous"; }
     }
 
-    function deconnexion() { if(isAdminMode) location.reload(); else { userSession = "Deconnecte"; document.getElementById('loginLivreur').value = "Tous"; refreshAll(); } }
-
-    function changerStatut(id, s) {
-        if(confirm("Confirmer le statut ?")) {
-            db.ref('courses/' + id).update({ statut: s });
-        }
-    }
+    function tracerAction(action) { db.ref('logs').push({ date: new Date().toLocaleString('fr-FR'), auteur: activeAdminName || "Système", details: action }); }
+    function ajouterRH() { const n = document.getElementById('rh_nom').value.trim(), c = document.getElementById('rh_code').value, r = document.getElementById('rh_role').value; if(n && c && r) { db.ref('staff/' + n).set({ mdp: c, role: r }); tracerAction(`Ajout personnel : ${n}`); document.getElementById('rh_nom').value = ''; document.getElementById('rh_code').value = ''; } }
+    function supprRH(n) { if(confirm(`Supprimer ${n} ?`)) { db.ref('staff/' + n).remove(); tracerAction(`Suppression personnel : ${n}`); } }
+    function creerCourse() { const c = document.getElementById('c_client').value, t = document.getElementById('c_tarif').value, d = document.getElementById('c_dest').value, l = document.getElementById('c_livreur').value, h = document.getElementById('c_heure').value; if(c && t) { db.ref('courses').push({ date: new Date().toISOString().split('T')[0], client: c, dest: d, tarif: parseInt(t), livreur: l, heure: h, statut: 'Attente', modifiee: false }); tracerAction(`Création course : ${c}`); annulerModif(); } }
+    function modifierCourse(id) { let c = courses.find(i => i.id === id); if(!c) return; document.getElementById('c_client').value = c.client; document.getElementById('c_dest').value = c.dest; document.getElementById('c_tarif').value = c.tarif; document.getElementById('c_livreur').value = c.livreur; document.getElementById('c_heure').value = c.heure || ""; document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-orange" onclick="sauvegarderModif('${id}')">METTRE À JOUR</button><button class="btn btn-black" style="background:#888" onclick="annulerModif()">ANNULER</button>`; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function sauvegarderModif(id) { const cn = document.getElementById('c_client').value; db.ref('courses/' + id).update({ client: cn, dest: document.getElementById('c_dest').value, tarif: parseInt(document.getElementById('c_tarif').value), livreur: document.getElementById('c_livreur').value, heure: document.getElementById('c_heure').value, modifiee: true }); tracerAction(`Modif/Reprog course : ${cn}`); annulerModif(); }
+    function annulerModif() { document.getElementById('c_client').value = ''; document.getElementById('c_dest').value = ''; document.getElementById('c_tarif').value = ''; document.getElementById('c_heure').value = ''; document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>`; refreshAll(); }
+    function supprimerCourse(id) { if(confirm("Supprimer cette course ?")) db.ref('courses/' + id).remove(); }
+    function changerStatut(id, s) { if(confirm("Confirmer le statut ?")) db.ref('courses/' + id).update({ statut: s }); }
 
     function refreshAll() {
         const l_rh = document.getElementById('listeRH'), s_rh = document.getElementById('c_livreur'), s_log = document.getElementById('loginLivreur'), live = document.getElementById('suiviLive'), l_liv = document.getElementById('listeCoursesLivreur'), statusArea = document.getElementById('sessionStatus'), logCard = document.getElementById('loginCard');
-        const aujourdhui = new Date().toISOString().split('T')[0];
-        
-        if(l_rh) l_rh.innerHTML = ''; 
-        s_rh.innerHTML = '<option>NON ASSIGNÉ</option>'; 
-        s_log.innerHTML = '<option value="Tous">-- IDENTIFIEZ-VOUS --</option>'; 
-        live.innerHTML = ''; l_liv.innerHTML = '';
-
-        if(isAdminMode) {
-            const nomAffiché = (activeAdminName === "Admin Principal") ? activeAdminName : `ADMIN : ${activeAdminName}`;
-            statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${nomAffiché}</span><span class="session-count">Contrôle Dashboard</span></div></div>`;
-            logCard.classList.add('hidden');
-        } else if(userSession !== "Deconnecte") {
-            const score = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === aujourdhui).length;
-            statusArea.innerHTML = `
-                <div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="session-info" style="text-align: left; align-items: flex-start;">
-                        <span class="session-label">LIVREUR : ${userSession}</span>
-                        <span class="session-count">Livrée(s) aujourd'hui : ${score}</span>
-                    </div>
-                    <span class="logout-link" onclick="deconnexion()" style="margin-top: 0;">Déconnexion</span>
-                </div>`;
-            logCard.classList.add('hidden');
-        } else { statusArea.innerHTML = ''; logCard.classList.remove('hidden'); }
-
-        for(let u in staff) {
-            if(u === "Admin") continue;
-            let rLabel = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe');
-            if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rLabel}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`;
-            if(staff[u].role.startsWith('livreur')) { s_rh.innerHTML += `<option value="${u}">${u}</option>`; s_log.innerHTML += `<option value="${u}">${u}</option>`; }
-        }
-        
-        let todayCount = 0;
-
+        const auj = new Date().toISOString().split('T')[0];
+        if(l_rh) l_rh.innerHTML = ''; s_rh.innerHTML = '<option>NON ASSIGNÉ</option>'; s_log.innerHTML = '<option value="Tous">-- IDENTIFIEZ-VOUS --</option>'; live.innerHTML = ''; l_liv.innerHTML = '';
+        if(isAdminMode) { statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${activeAdminName}</span><span class="session-count">Contrôle Dashboard</span></div></div>`; logCard.classList.add('hidden'); }
+        else if(userSession !== "Deconnecte") { const sc = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === auj).length; statusArea.innerHTML = `<div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;"><div class="session-info" style="text-align: left; align-items: flex-start;"><span class="session-label">LIVREUR : ${userSession}</span><span class="session-count">Livrée(s) aujourd'hui : ${sc}</span></div><span class="logout-link" onclick="deconnexion()">Déconnexion</span></div>`; logCard.classList.add('hidden'); }
+        else { statusArea.innerHTML = ''; logCard.classList.remove('hidden'); }
+        for(let u in staff) { if(u === "Admin") continue; let rL = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe'); if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rL}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`; if(staff[u].role.startsWith('livreur')) { s_rh.innerHTML += `<option value="${u}">${u}</option>`; s_log.innerHTML += `<option value="${u}">${u}</option>`; } }
+        let tC = 0;
         courses.forEach(c => {
-            // OPTION A : On ne traite dans le Suivi Live que les courses du jour
-            if (c.date === aujourdhui) {
-                todayCount++;
-                let sClass = c.statut === 'Livré' ? 's-livre' : (c.statut === 'En cours' ? 's-cours' : (c.statut === 'Non Livré' ? 's-echec' : 's-attente'));
-                let hLabel = c.heure ? `<span style="color:var(--accent); margin-left:8px;">${c.heure}</span>` : '';
-                let modIcon = c.modifiee ? `<span style="margin-right:5px; font-size:0.8rem; color:var(--process)" title="Course modifiée/reprogrammée">🔄</span>` : "";
-
-                let actions = (isAdminMode && c.statut !== 'Livré') ? 
-                    `<div style="display: flex; gap: 10px; margin-left: 10px; font-size: 1rem; align-items: center;">
-                        <span onclick="modifierCourse('${c.id}')" style="cursor:pointer;" title="Modifier">📝</span>
-                        <span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;" title="Supprimer">🗑️</span>
-                    </div>` : '';
-                
-                live.innerHTML += `
-                    <div class="suivi-row">
-                        <div class="suivi-info">
-                            <span class="suivi-client">${c.client}${hLabel}</span>
-                            <span class="suivi-sub">${c.livreur} • ${c.tarif} F</span>
-                        </div>
-                        <div style="display: flex; align-items: center;">
-                            ${modIcon}
-                            <span class="statut-pill ${sClass}">${c.statut}</span>
-                            ${actions}
-                        </div>
-                    </div>`;
+            if (c.date === auj) {
+                tC++;
+                let sC = c.statut === 'Livré' ? 's-livre' : (c.statut === 'En cours' ? 's-cours' : (c.statut === 'Non Livré' ? 's-echec' : 's-attente'));
+                let act = (isAdminMode && c.statut !== 'Livré') ? `<div style="display: flex; gap: 10px; margin-left: 10px; font-size: 1rem; align-items: center;"><span onclick="modifierCourse('${c.id}')" style="cursor:pointer;">📝</span><span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;">🗑️</span></div>` : '';
+                live.innerHTML += `<div class="suivi-row"><div class="suivi-info"><span class="suivi-client">${c.client} <span style="color:var(--accent); margin-left:8px;">${c.heure||''}</span></span><span class="suivi-sub">${c.livreur} • ${c.tarif} F</span></div><div style="display: flex; align-items: center;">${c.modifiee?'🔄':''}<span class="statut-pill ${sC}">${c.statut}</span>${act}</div></div>`;
             }
-            
-            // Partie Livreur (Toujours filtrée par session et courses non terminées)
             if(userSession !== "Deconnecte" && c.livreur === userSession && c.statut !== 'Livré' && c.statut !== 'Non Livré') {
-                let content = `<div class="livreur-line"><span class="livreur-client-name">${c.client} <span style="color:var(--accent); margin-left:7px">${c.tarif}F</span> ${c.heure ? '<span style="color:var(--accent);margin-left:5px">'+c.heure+'</span>' : ''}</span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
-                content += (c.statut === 'Attente') ? `<button class="btn btn-orange" onclick="changerStatut('${c.id}', 'En cours')">ACCEPTER LA COURSE</button>` : `<div style="display:flex; gap:10px;"><button class="btn btn-green" style="flex:2" onclick="changerStatut('${c.id}', 'Livré')">LIVRÉ</button><button class="btn btn-red" style="flex:1" onclick="changerStatut('${c.id}', 'Non Livré')">ÉCHEC</button></div>`;
-                l_liv.innerHTML += `<div class="card">${content}</div>`;
+                let ct = `<div class="livreur-line"><span class="livreur-client-name">${c.client} <span style="color:var(--accent); margin-left:7px">${c.tarif}F</span></span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
+                ct += (c.statut === 'Attente') ? `<button class="btn btn-orange" onclick="changerStatut('${c.id}', 'En cours')">ACCEPTER LA COURSE</button>` : `<div style="display:flex; gap:10px;"><button class="btn btn-green" style="flex:2" onclick="changerStatut('${c.id}', 'Livré')">LIVRÉ</button><button class="btn btn-red" style="flex:1" onclick="changerStatut('${c.id}', 'Non Livré')">ÉCHEC</button></div>`;
+                l_liv.innerHTML += `<div class="card">${ct}</div>`;
             }
         });
-
-        document.getElementById('countCourses').innerText = todayCount;
-
+        document.getElementById('countCourses').innerText = tC;
         if (isAdminPrincipal && !document.getElementById('tabRH').classList.contains('hidden')) {
             document.getElementById('logsContainer').classList.remove('hidden');
             document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #eee;"><span style="color:var(--accent)">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
-        } else { document.getElementById('logsContainer').classList.add('hidden'); }
+        }
         renderCompta();
     }
 
     function renderCompta() {
-        const type = document.getElementById('typeFiltre').value, ref = new Date(document.getElementById('dateRef').value);
-        let bilan = {}, details = {}, counts = {};
+        const ty = document.getElementById('typeFiltre').value, re = new Date(document.getElementById('dateRef').value);
+        let bi = {}, de = {}, co = {};
         courses.filter(c => c.statut === 'Livré').forEach(c => {
             const d = new Date(c.date);
-            if((type === 'jour' && d.toDateString() === ref.toDateString()) || (type === 'semaine' && (ref - d) / 86400000 < 7 && (ref - d) >= 0) || (type === 'mois' && d.getMonth() === ref.getMonth() && d.getFullYear() === ref.getFullYear())) {
-                bilan[c.livreur] = (bilan[c.livreur] || 0) + c.tarif;
-                counts[c.livreur] = (counts[c.livreur] || 0) + 1;
-                if(!details[c.livreur]) details[c.livreur] = []; details[c.livreur].push(c);
+            if((ty === 'jour' && d.toDateString() === re.toDateString()) || (ty === 'semaine' && (re - d) / 86400000 < 7 && (re - d) >= 0) || (ty === 'mois' && d.getMonth() === re.getMonth() && d.getFullYear() === re.getFullYear())) {
+                bi[c.livreur] = (bi[c.livreur] || 0) + c.tarif; co[c.livreur] = (co[c.livreur] || 0) + 1;
+                if(!de[c.livreur]) de[c.livreur] = []; de[c.livreur].push(c);
             }
         });
-
         let h = `<table class="fin-table"><tr><th>NOM</th><th>TOTAL</th><th>GAINS</th><th>P'GO</th></tr>`, tT=0, tG=0, tP=0;
-        for(let n in bilan) {
-            let pP = (staff[n] && staff[n].role === 'livreur_packngo') ? Math.round(bilan[n]*0.7) : Math.round(bilan[n]*0.3);
-            let pL = bilan[n] - pP; tT+=bilan[n]; tG+=pL; tP+=pP;
-            h += `<tr><td>${n}</td><td>${bilan[n]}</td><td style="color:var(--done)">${pL}</td><td>${pP}</td></tr>`;
+        for(let n in bi) {
+            let pP = (staff[n] && staff[n].role === 'livreur_packngo') ? Math.round(bi[n]*0.7) : Math.round(bi[n]*0.3);
+            let pL = bi[n] - pP; tT+=bi[n]; tG+=pL; tP+=pP;
+            h += `<tr><td>${n}</td><td>${bi[n]}</td><td>${pL}</td><td>${pP}</td></tr>`;
         }
-        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bilan).length ? h + `<tr class="total-row"><td>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr></table>` : "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
-
-        let detH = "";
-        for(let n in details) {
-            detH += `<div style="margin-bottom:25px;"><div class="detail-header"><span class="detail-name">${n}</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:0.6rem;font-weight:700;color:#777;text-transform:uppercase;">Courses</span><span class="count-number">${counts[n]}</span></div></div>`;
-            details[n].forEach(c => { 
-                detH += `<div class="compta-detail-row"><span><b style="color:var(--dark);">${c.client}</b> (📍${c.dest})</span><b>${c.tarif} F</b></div>`; 
-            });
-            detH += `</div>`;
+        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bi).length ? h + `<tr class="total-row"><td>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr></table>` : "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
+        let dH = "";
+        for(let n in de) {
+            dH += `<div style="margin-bottom:25px;"><div class="detail-header"><span class="detail-name">${n}</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:0.6rem;font-weight:700;color:#777;text-transform:uppercase;">Courses</span><span class="count-number">${co[n]}</span></div></div>`;
+            de[n].forEach(c => { dH += `<div class="compta-detail-row"><span><b style="color:var(--dark);">${c.client}</b> (📍${c.dest})</span><b>${c.tarif} F</b></div>`; });
+            dH += `</div>`;
         }
-        document.getElementById('detailsComptaContainer').innerHTML = detH || "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
+        document.getElementById('detailsComptaContainer').innerHTML = dH || "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
     }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log("Pack'n Go : Service Worker Actif"))
-          .catch((err) => console.log("Erreur SW :", err));
-    }
+    
+    function deconnexion() { localStorage.clear(); location.reload(); }
 </script>
 </body>
 </html>
