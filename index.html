@@ -222,25 +222,23 @@
 </div>
 
 <script>
-    // --- PARTIE 1 : RESTAURATION SANS FLASH ---
     const savedAdmin = localStorage.getItem('png_admin');
     const savedLivreur = localStorage.getItem('png_livreur');
     const savedTab = localStorage.getItem('png_tab');
 
-    // Config Firebase
     const firebaseConfig = { apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk", authDomain: "pack-n-go-app.firebaseapp.com", databaseURL: "https://pack-n-go-app-default-rtdb.firebaseio.com", projectId: "pack-n-go-app", storageBucket: "pack-n-go-app.firebasestorage.app", messagingSenderId: "440398074655", appId: "1:440398074655:web:69ed87e2566fab0d50562a" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let courses = [], staff = {}, logs = [], userSession = "Deconnecte", activeAdminName = "", isAdminMode = false, isAdminPrincipal = false;
 
-    // Rétablissement immédiat des variables avant le chargement des données
     if(savedAdmin) {
         const d = JSON.parse(savedAdmin); isAdminMode = true; isAdminPrincipal = d.isPrincipal; activeAdminName = d.name;
     } else if(savedLivreur) { userSession = savedLivreur; }
 
-    // --- PARTIE 2 : LOGIQUE FIREBASE ---
     document.getElementById('dateRef').valueAsDate = new Date();
+    
+    // Écouteur ultra-réactif pour le staff
     db.ref('staff').on('value', snap => { 
         staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } }; 
         if(isAdminMode) {
@@ -251,30 +249,39 @@
             if(savedTab) {
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById(savedTab).classList.remove('hidden');
+                const target = document.getElementById(savedTab);
+                if(target) target.classList.remove('hidden');
                 const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(savedTab));
                 if(btn) btn.classList.add('active');
             }
+            nettoyerLogsAutomatique();
         }
         refreshAll(); 
-    });
+    }, { onlyOnce: false }); // On force l'écoute continue
 
     db.ref('courses').on('value', snap => { courses = []; snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); }); refreshAll(); });
-    db.ref('logs').limitToFirst(50).on('value', snap => { logs = []; snap.forEach(child => { logs.unshift(child.val()); }); refreshAll(); });
+    db.ref('logs').limitToLast(50).on('value', snap => { logs = []; snap.forEach(child => { logs.unshift(child.val()); }); refreshAll(); });
 
-    // --- PARTIE 3 : TES FONCTIONS ORIGINALES ---
     function authAdmin() {
-        if(isAdminMode) { localStorage.clear(); location.reload(); } else {
-            let p = prompt("CODE ACCÈS :"); if(!p) return;
-            if(p === "0612") { isAdminPrincipal = true; activeAdminName = "Admin Principal"; isAdminMode = true; } 
-            else {
-                let found = Object.keys(staff).find(u => staff[u].mdp === p && staff[u].role === 'admin');
-                if(found) { isAdminPrincipal = false; activeAdminName = found; isAdminMode = true; }
-                else { alert("Accès refusé"); return; }
-            }
-            localStorage.setItem('png_admin', JSON.stringify({name: activeAdminName, isPrincipal: isAdminPrincipal}));
-            localStorage.removeItem('png_livreur');
+        if(isAdminMode) { localStorage.clear(); location.reload(); return; }
+        
+        let p = prompt("CODE ACCÈS :"); 
+        if(!p) return;
+
+        // Validation immédiate
+        if(p === "0612") { 
+            localStorage.setItem('png_admin', JSON.stringify({name: "Admin Principal", isPrincipal: true}));
             location.reload();
+        } else {
+            // On vérifie directement dans l'objet 'staff' déjà chargé en mémoire
+            let userKey = Object.keys(staff).find(k => staff[k].mdp === p && staff[k].role === 'admin');
+            if(userKey) {
+                localStorage.setItem('png_admin', JSON.stringify({name: userKey, isPrincipal: false}));
+                localStorage.removeItem('png_livreur');
+                location.reload();
+            } else {
+                alert("Accès refusé ou données non chargées. Réessayez dans 1 seconde.");
+            }
         }
     }
 
@@ -294,6 +301,23 @@
     }
 
     function tracerAction(action) { db.ref('logs').push({ date: new Date().toLocaleString('fr-FR'), auteur: activeAdminName || "Système", details: action }); }
+    
+    function nettoyerLogsAutomatique() {
+        if (!isAdminPrincipal) return;
+        db.ref('logs').limitToLast(1).once('value', snap => {
+            const lastLog = snap.val();
+            if (lastLog) {
+                const key = Object.keys(lastLog)[0];
+                const dateDernierLog = lastLog[key].date.split(' ')[0];
+                const dateAujourdhui = new Date().toLocaleDateString('fr-FR');
+                if (dateDernierLog !== dateAujourdhui) {
+                    db.ref('logs').remove();
+                    tracerAction("Initialisation du journal du jour");
+                }
+            }
+        });
+    }
+
     function ajouterRH() { const n = document.getElementById('rh_nom').value.trim(), c = document.getElementById('rh_code').value, r = document.getElementById('rh_role').value; if(n && c && r) { db.ref('staff/' + n).set({ mdp: c, role: r }); tracerAction(`Ajout personnel : ${n}`); document.getElementById('rh_nom').value = ''; document.getElementById('rh_code').value = ''; } }
     function supprRH(n) { if(confirm(`Supprimer ${n} ?`)) { db.ref('staff/' + n).remove(); tracerAction(`Suppression personnel : ${n}`); } }
     function creerCourse() { const c = document.getElementById('c_client').value, t = document.getElementById('c_tarif').value, d = document.getElementById('c_dest').value, l = document.getElementById('c_livreur').value, h = document.getElementById('c_heure').value; if(c && t) { db.ref('courses').push({ date: new Date().toISOString().split('T')[0], client: c, dest: d, tarif: parseInt(t), livreur: l, heure: h, statut: 'Attente', modifiee: false }); tracerAction(`Création course : ${c}`); annulerModif(); } }
@@ -307,9 +331,16 @@
         const l_rh = document.getElementById('listeRH'), s_rh = document.getElementById('c_livreur'), s_log = document.getElementById('loginLivreur'), live = document.getElementById('suiviLive'), l_liv = document.getElementById('listeCoursesLivreur'), statusArea = document.getElementById('sessionStatus'), logCard = document.getElementById('loginCard');
         const auj = new Date().toISOString().split('T')[0];
         if(l_rh) l_rh.innerHTML = ''; s_rh.innerHTML = '<option>NON ASSIGNÉ</option>'; s_log.innerHTML = '<option value="Tous">-- IDENTIFIEZ-VOUS --</option>'; live.innerHTML = ''; l_liv.innerHTML = '';
-        if(isAdminMode) { statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${activeAdminName}</span><span class="session-count">Contrôle Dashboard</span></div></div>`; logCard.classList.add('hidden'); }
+        
+        if(isAdminMode) { 
+            let label = isAdminPrincipal ? activeAdminName : `ADMIN : ${activeAdminName}`;
+            let subtext = isAdminPrincipal ? "Contrôle Dashboard" : "Gestion Flux";
+            statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${label}</span><span class="session-count">${subtext}</span></div></div>`; 
+            logCard.classList.add('hidden'); 
+        }
         else if(userSession !== "Deconnecte") { const sc = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === auj).length; statusArea.innerHTML = `<div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;"><div class="session-info" style="text-align: left; align-items: flex-start;"><span class="session-label">LIVREUR : ${userSession}</span><span class="session-count">Livrée(s) aujourd'hui : ${sc}</span></div><span class="logout-link" onclick="deconnexion()">Déconnexion</span></div>`; logCard.classList.add('hidden'); }
         else { statusArea.innerHTML = ''; logCard.classList.remove('hidden'); }
+        
         for(let u in staff) { if(u === "Admin") continue; let rL = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe'); if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rL}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`; if(staff[u].role.startsWith('livreur')) { s_rh.innerHTML += `<option value="${u}">${u}</option>`; s_log.innerHTML += `<option value="${u}">${u}</option>`; } }
         let tC = 0;
         courses.forEach(c => {
@@ -326,9 +357,13 @@
             }
         });
         document.getElementById('countCourses').innerText = tC;
-        if (isAdminPrincipal && !document.getElementById('tabRH').classList.contains('hidden')) {
-            document.getElementById('logsContainer').classList.remove('hidden');
-            document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #eee;"><span style="color:var(--accent)">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
+
+        if (isAdminPrincipal) {
+            const logsCont = document.getElementById('logsContainer');
+            if(logsCont) {
+                logsCont.classList.remove('hidden');
+                document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #eee;"><span style="color:var(--accent)">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
+            }
         }
         renderCompta();
     }
