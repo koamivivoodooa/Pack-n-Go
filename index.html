@@ -120,7 +120,6 @@
 
         .compta-detail-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.7rem; display: flex; justify-content: space-between; }
         
-        /* Correction espacement icône mise à jour */
         .icon-update { font-size: 0.75rem; margin-right: 8px; }
 
         @media print { .no-print { display: none !important; } .card { box-shadow: none; border: 1px solid #000; } body { background: #fff; } .container { padding: 0; } }
@@ -334,7 +333,28 @@
             statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${label}</span><span class="session-count">${subtext}</span></div></div>`; 
             logCard.classList.add('hidden'); 
         }
-        else if(userSession !== "Deconnecte") { const sc = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === auj).length; statusArea.innerHTML = `<div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;"><div class="session-info" style="text-align: left; align-items: flex-start;"><span class="session-label">LIVREUR : ${userSession}</span><span class="session-count">Livrée(s) aujourd'hui : ${sc}</span></div><span class="logout-link" onclick="deconnexion()">Déconnexion</span></div>`; logCard.classList.add('hidden'); }
+        else if(userSession !== "Deconnecte") { 
+            const sc = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === auj).length;
+            
+            // CALCUL DES GAINS DU JOUR
+            const totalF = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === auj).reduce((sum, c) => sum + c.tarif, 0);
+            const partPack = (staff[userSession] && staff[userSession].role === 'livreur_packngo') ? Math.round(totalF * 0.7) : Math.round(totalF * 0.3);
+            const gainsLivreur = totalF - partPack;
+
+            statusArea.innerHTML = `
+                <div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
+                    <div class="session-info" style="text-align: left; align-items: flex-start;">
+                        <span class="session-label">LIVREUR : ${userSession}</span>
+                        <span class="session-count">Livrée(s) aujourd'hui : ${sc}</span>
+                    </div>
+                    <span class="logout-link" onclick="deconnexion()">Déconnexion</span>
+                </div>
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-left: 6px solid var(--done); margin-bottom: 20px;">
+                    <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--dark);">Gains du jour</span>
+                    <span style="background: var(--done); color: white; padding: 6px 12px; border-radius: 4px; font-size: 1rem; font-weight: 800; min-width: 85px; text-align: center;">${gainsLivreur} F</span>
+                </div>`; 
+            logCard.classList.add('hidden'); 
+        }
         else { statusArea.innerHTML = ''; logCard.classList.remove('hidden'); }
         
         for(let u in staff) { if(u === "Admin") continue; let rL = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe'); if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rL}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`; if(staff[u].role.startsWith('livreur')) { s_rh.innerHTML += `<option value="${u}">${u}</option>`; s_log.innerHTML += `<option value="${u}">${u}</option>`; } }
