@@ -2,8 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pack'n Go | Dashboard</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#000000">
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -16,11 +23,10 @@
         .wrapper { max-width: 500px; margin: auto; }
         
         header { 
-            text-align: center; background: var(--dark); color: white; padding: 55px 15px; 
+            text-align: center; background: var(--dark); padding: 25px 15px; 
             border-bottom: 8px solid var(--accent); 
         }
-        header h1 { font-size: 1.5rem; letter-spacing: 5px; text-transform: uppercase; margin: 0; }
-        header p { font-size: 0.65rem; letter-spacing: 2px; margin-top: 2px; text-transform: uppercase; opacity: 0.9; }
+        header img { height: 50px; width: auto; object-fit: contain; }
         
         .container { padding: 15px; padding-bottom: 80px; width: 100%; }
         .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #eee; width: 100%; }
@@ -118,8 +124,7 @@
 
 <div class="wrapper">
     <header>
-        <h1>pack'n go</h1>
-        <p>votre colis, notre mission</p>
+        <img src="logo.png" alt="Pack'n Go">
     </header>
 
     <div class="container">
@@ -214,7 +219,6 @@
 </div>
 
 <script>
-    // CONFIGURATION FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk",
         authDomain: "pack-n-go-app.firebaseapp.com",
@@ -238,7 +242,6 @@
 
     document.getElementById('dateRef').valueAsDate = new Date();
 
-    // ÉCOUTE FIREBASE EN TEMPS RÉEL
     db.ref('staff').on('value', snap => {
         staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } };
         refreshAll();
@@ -474,6 +477,12 @@
             detH += `</div>`;
         }
         document.getElementById('detailsComptaContainer').innerHTML = detH || "<p style='text-align:center;font-size:0.7rem;color:#999;padding:20px'>Vide</p>";
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log("Pack'n Go : Service Worker Actif"))
+          .catch((err) => console.log("Erreur SW :", err));
     }
 </script>
 </body>
