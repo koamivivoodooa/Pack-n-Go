@@ -11,186 +11,237 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="theme-color" content="#000000">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f5f7fb; color: #1a1a2e; padding-bottom: 80px; }
-        .header { background: #0a0a0a; padding: 20px; text-align: center; border-bottom: 3px solid #e63946; position: sticky; top: 0; z-index: 100; }
-        .header img { height: 70px; object-fit: contain; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
-        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
-        .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #e63946; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .section-title::before { content: ''; width: 4px; height: 18px; background: #e63946; border-radius: 2px; }
-        input, select { width: 100%; padding: 14px 16px; border: 1.5px solid #eef2f6; border-radius: 16px; font-family: 'Inter', sans-serif; font-size: 0.9rem; margin-bottom: 12px; background: #fff; }
-        input:focus, select:focus { outline: none; border-color: #e63946; box-shadow: 0 0 0 3px rgba(230,57,70,0.1); }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 40px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
-        .btn-primary { background: #0a0a0a; color: white; }
-        .btn-primary:hover { background: #e63946; transform: translateY(-2px); }
-        .btn-success { background: #1db954; color: white; }
-        .btn-warning { background: #f39c12; color: white; }
-        .btn-danger { background: #e63946; color: white; }
-        .btn-outline { background: transparent; border: 1.5px solid #eef2f6; color: #1a1a2e; }
-        .badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.65rem; font-weight: 700; }
-        .badge-attente { background: #f1f3f5; color: #6c757d; }
-        .badge-cours { background: #fff3e0; color: #f39c12; }
-        .badge-livre { background: #e8f5e9; color: #1db954; }
-        .badge-echec { background: #ffebee; color: #e63946; }
-        .session-card { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); color: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .gains-card { background: linear-gradient(135deg, #1db954 0%, #0d8c3f 100%); border-radius: 24px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .gains-card span:last-child { font-size: 1.6rem; font-weight: 800; }
-        .logout-btn { background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 40px; font-size: 0.7rem; cursor: pointer; }
-        .course-item { background: #f9f9f9; border-radius: 16px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-        .course-item.selected { border-color: #e63946; background: white; box-shadow: 0 4px 12px rgba(230,57,70,0.15); }
-        .course-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .course-client { font-weight: 800; }
-        .course-price { color: #e63946; font-weight: 800; }
-        .whatsapp-float { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.25); cursor: pointer; z-index: 1000; border: none; font-size: 30px; color: white; }
-        .whatsapp-float.disabled { background: #aaa; cursor: not-allowed; opacity: 0.6; }
-        .whatsapp-float:active { transform: scale(0.95); }
-        .whatsapp-tooltip { position: fixed; bottom: 90px; right: 20px; background: #0a0a0a; color: white; padding: 8px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; z-index: 999; pointer-events: none; }
-        .admin-nav { display: flex; background: white; border-radius: 60px; padding: 4px; margin-bottom: 20px; gap: 4px; }
-        .admin-nav-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 40px; font-weight: 600; font-size: 0.7rem; cursor: pointer; }
-        .admin-nav-btn.active { background: #0a0a0a; color: white; }
-        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .admin-trigger { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0a0a0a; color: white; padding: 12px 24px; border-radius: 40px; font-size: 0.7rem; font-weight: 700; cursor: pointer; z-index: 1000; }
+        :root { --accent: #e63946; --dark: #000; --bg: #fafafa; --done: #1db954; --process: #f39c12; --fail: #e63946; }
+        * { box-sizing: border-box; }
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; color: var(--dark); overflow-x: hidden; }
+        
+        .wrapper { max-width: 1000px; margin: auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        @media (max-width: 600px) { .wrapper { max-width: 500px; } }
+        
+        header { text-align: center; background: var(--dark); padding: 15px; border-bottom: 8px solid var(--accent); }
+        header img { height: 90px; width: auto; object-fit: contain; }
+        
+        .container { padding: 15px; padding-bottom: 80px; width: 100%; }
+        .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #eee; width: 100%; }
+        
+        input, select { width: 100%; display: block; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 0.85rem; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-family: inherit; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: all 0.3s; margin-top: 5px; }
+        .btn-black { background: var(--dark); color: white; }
+        .btn-red { background: var(--accent); color: white; }
+        .btn-orange { background: var(--process); color: white; }
+        .btn-green { background: var(--done); color: white; }
+
+        .session-badge { display: flex; background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 6px solid var(--accent); }
+        .session-info { display: flex; flex-direction: column; gap: 5px; }
+        .session-label { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; color: var(--dark); }
+        .session-count { font-size: 0.75rem; color: #555; font-weight: 600; }
+        
+        .logout-link { font-size: 0.7rem; color: var(--fail); cursor: pointer; text-transform: uppercase; font-weight: 700; border: 1.5px solid var(--fail); padding: 6px 10px; border-radius: 4px; }
+        
+        .nav-admin { display: flex; background: #eee; gap: 2px; width: 100%; }
+        .nav-btn { flex: 1; padding: 12px; border: none; background: #ddd; font-size: 0.55rem; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .nav-btn.active { background: #fff; border-bottom: 3px solid var(--accent); }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-left: 3px solid var(--accent); padding-left: 8px; }
+        .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .statut-pill { display: inline-block; min-width: 75px; text-align: center; font-size: 0.55rem; padding: 4px 0; border-radius: 4px; font-weight: 800; text-transform: uppercase; }
+        .s-attente { background: #eee; color: #666; }
+        .s-cours { background: #fff3e0; color: var(--process); }
+        .s-livre { background: #e8f5e9; color: var(--done); }
+        .s-echec { background: #ffebee; color: var(--fail); }
+
+        .suivi-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
+        .suivi-info { display: flex; flex-direction: column; gap: 2px; }
+        .suivi-client { font-size: 0.85rem; font-weight: 700; }
+        .suivi-sub { font-size: 0.65rem; color: #777; }
+
+        .user-tag { display: grid; grid-template-columns: 140px 1fr auto; gap: 15px; align-items: center; padding: 12px 10px; background: #f9f9f9; margin-bottom: 5px; border-radius: 4px; font-size: 0.85rem; }
         .hidden { display: none !important; }
-        .offline-banner { position: fixed; top: 0; left: 0; right: 0; background: #e63946; color: white; text-align: center; padding: 12px; font-size: 0.7rem; z-index: 9999; }
-        .fin-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
-        .fin-table th, .fin-table td { padding: 12px 4px; text-align: center; border-bottom: 1px solid #f0f0f0; }
-        .total-row { background: #0a0a0a; color: white; }
+        .admin-trigger { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--dark); color: #fff; padding: 10px 20px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; z-index: 1000; }
+        
+        .livreur-line { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 10px; align-items: center; }
+        .livreur-client-name { font-size: 0.85rem; font-weight: 700; }
+        .livreur-loc { color: var(--dark); font-weight: 700; font-size: 0.85rem; }
+
+        .fin-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; }
+        .fin-table th { padding: 10px 2px; color: #888; text-align: center; }
+        .fin-table td { padding: 12px 2px; text-align: center; font-weight: 700; }
+        .total-row { background: var(--dark); color: #fff; }
+        
+        /* WhatsApp flottant */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            cursor: pointer;
+            z-index: 1000;
+            border: none;
+            font-size: 28px;
+            color: white;
+        }
+        .whatsapp-float.disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        /* Bannière hors connexion */
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #e63946;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 9999;
+        }
+        
+        .course-selectable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .course-selectable.selected {
+            border: 2px solid #e63946;
+            background: #fff5f5;
+        }
     </style>
 </head>
 <body>
 
-<div class="header no-print">
-    <img src="logo.png" alt="Pack'n Go">
-</div>
+<div class="wrapper">
+    <header>
+        <img src="logo.png" alt="Pack'n Go">
+    </header>
 
-<div class="container">
-    <div id="sessionStatus"></div>
-    <div id="sectionLivreur">
-        <div id="loginCard" class="card">
-            <div class="section-title">Espace Livreur</div>
-            <select id="loginLivreur" onchange="connexionLivreur()">
-                <option value="Tous">-- IDENTIFIEZ-VOUS --</option>
-            </select>
-        </div>
-        <div id="listeCoursesLivreur"></div>
-    </div>
+    <div class="container">
+        <div id="sessionStatus"></div> 
 
-    <div id="sectionAdmin" class="hidden">
-        <div class="admin-nav no-print">
-            <button class="admin-nav-btn active" onclick="switchTab('tabCourses')">📦 Courses</button>
-            <button class="admin-nav-btn" onclick="switchTab('tabCompta')">💰 Compta</button>
-            <button id="btnNavRH" class="admin-nav-btn" onclick="switchTab('tabRH')">👥 RH</button>
-        </div>
-
-        <div id="tabCourses">
-            <div class="card no-print">
-                <div class="section-title">Nouvelle course</div>
-                <input type="text" id="c_client" placeholder="Nom du client">
-                <input type="text" id="c_dest" placeholder="Destination">
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="c_tarif" placeholder="Tarif (FCFA)" step="500">
-                    <input type="time" id="c_heure">
-                </div>
-                <select id="c_livreur"></select>
-                <div id="formActionContainer">
-                    <button class="btn btn-primary" onclick="creerCourse()">+ Programmer</button>
-                </div>
-            </div>
-            <div class="card">
-                <div class="section-title">Suivi du jour <span id="countCourses" style="margin-left: auto;">0</span></div>
-                <div id="suiviLive"></div>
-            </div>
-        </div>
-
-        <div id="tabCompta" class="hidden">
-            <div class="card">
-                <div class="section-title">Bilan financier</div>
-                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                    <select id="typeFiltre" onchange="renderCompta()" style="flex:1;">
-                        <option value="jour">Jour</option>
-                        <option value="semaine">Semaine</option>
-                        <option value="mois">Mois</option>
-                    </select>
-                    <input type="date" id="dateRef" onchange="renderCompta()" style="flex:1;">
-                </div>
-                <div id="tableComptaContainer"></div>
-            </div>
-            <div class="card">
-                <div class="section-title">Détails par livreur</div>
-                <div id="detailsComptaContainer"></div>
-                <button class="btn btn-primary no-print" onclick="window.print()" style="margin-top: 16px;">🖨️ Imprimer</button>
-            </div>
-        </div>
-
-        <div id="tabRH" class="hidden">
-            <div class="card">
-                <div class="section-title">Ajouter un membre</div>
-                <input type="text" id="rh_nom" placeholder="Nom complet">
-                <input type="tel" id="rh_telephone" placeholder="Numéro WhatsApp (ex: 90123456)">
-                <input type="password" id="rh_code" placeholder="Code secret">
-                <select id="rh_role">
-                    <option value="" disabled selected>-- Rôle --</option>
-                    <option value="livreur_packngo">Livreur Pack'n Go</option>
-                    <option value="livreur_externe">Livreur Externe</option>
-                    <option value="admin">Administrateur</option>
+        <div id="sectionLivreur">
+            <div class="card" id="loginCard">
+                <div class="section-header"><div class="section-title">Espace Travail</div></div>
+                <select id="loginLivreur" onchange="connexionLivreur()">
+                    <option value="Tous">-- IDENTIFIEZ-VOUS --</option>
                 </select>
-                <button class="btn btn-primary" onclick="ajouterRH()">Enregistrer</button>
             </div>
-            <div class="card">
-                <div class="section-title">Personnel</div>
-                <div id="listeRH"></div>
+            <div id="listeCoursesLivreur"></div>
+        </div>
+
+        <div id="sectionAdmin" class="hidden">
+            <nav class="nav-admin no-print">
+                <button class="nav-btn active" onclick="switchTab('tabCourses')">Courses</button>
+                <button class="nav-btn" onclick="switchTab('tabCompta')">Comptabilité</button>
+                <button id="btnNavRH" class="nav-btn" onclick="switchTab('tabRH')">Ressources H.</button>
+            </nav>
+
+            <div id="tabCourses" class="tab-content">
+                <div class="card no-print">
+                    <div class="section-header"><div class="section-title">Gestion Course</div></div>
+                    <input type="text" id="c_client" placeholder="CLIENT">
+                    <input type="text" id="c_dest" placeholder="DESTINATION">
+                    <div style="display: flex; gap:10px;">
+                        <input type="number" id="c_tarif" placeholder="TARIF" step="500">
+                        <input type="time" id="c_heure">
+                    </div>
+                    <select id="c_livreur"></select>
+                    <div id="formActionContainer">
+                        <button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header">
+                        <div class="section-title">Suivi Live (Aujourd'hui)</div>
+                        <div id="countCourses" style="font-size: 0.6rem; background: #eee; padding: 2px 8px; border-radius: 10px;">0</div>
+                    </div>
+                    <div id="suiviLive"></div>
+                </div>
             </div>
-            <div id="logsContainer" class="card hidden">
-                <div class="section-title">Journal</div>
-                <div id="listeLogs" style="font-size: 0.7rem; max-height: 200px; overflow-y: auto;"></div>
+
+            <div id="tabCompta" class="tab-content hidden">
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Bilan Financier Global</div></div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <select id="typeFiltre" onchange="renderCompta()">
+                            <option value="jour">JOUR</option>
+                            <option value="semaine">SEMAINE</option>
+                            <option value="mois">MOIS</option>
+                        </select>
+                        <input type="date" id="dateRef" onchange="renderCompta()">
+                    </div>
+                    <div id="tableComptaContainer"></div>
+                </div>
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Détails par Livreur</div></div>
+                    <div id="detailsComptaContainer"></div>
+                    <button class="btn btn-red no-print" style="margin-top: 15px;" onclick="window.print()">IMPRIMER</button>
+                </div>
+            </div>
+
+            <div id="tabRH" class="tab-content hidden">
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Ajouter un Membre</div></div>
+                    <input type="text" id="rh_nom" placeholder="NOM COMPLET">
+                    <input type="tel" id="rh_telephone" placeholder="NUMÉRO WHATSAPP (ex: 90123456)">
+                    <input type="password" id="rh_code" placeholder="CODE SECRET">
+                    <select id="rh_role">
+                        <option value="" disabled selected>-- CHOISIR LE RÔLE --</option>
+                        <option value="livreur_packngo">Livreur Pack'n Go</option>
+                        <option value="livreur_externe">Livreur Externe</option>
+                        <option value="admin">Administrateur Adjoint</option>
+                    </select>
+                    <button class="btn btn-black" onclick="ajouterRH()">ENREGISTRER</button>
+                </div>
+                <div class="card">
+                    <div class="section-header"><div class="section-title">Liste du personnel</div></div>
+                    <div id="listeRH"></div>
+                </div>
+                <div id="logsContainer" class="card hidden">
+                    <div class="section-header"><div class="section-title">Journal d'activités</div></div>
+                    <div id="listeLogs" style="font-size: 0.65rem; max-height: 250px; overflow-y: auto;"></div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="adminTrigger" class="admin-trigger no-print" onclick="authAdmin()">🔐 ACCÈS ADMIN</div>
+        <div class="admin-trigger no-print" onclick="authAdmin()" id="btnAdmin">ACCÈS ADMIN</div>
+    </div>
 </div>
 
-<button id="whatsappBtn" class="whatsapp-float disabled">💬</button>
-<div id="whatsappTooltip" class="whatsapp-tooltip hidden">Sélectionnez une course</div>
+<!-- Bouton WhatsApp flottant -->
+<div id="whatsappBtn" class="whatsapp-float disabled" onclick="appelerContact()">💬</div>
 
 <script>
-    const firebaseConfig = { 
-        apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk", 
-        authDomain: "pack-n-go-app.firebaseapp.com", 
-        databaseURL: "https://pack-n-go-app-default-rtdb.firebaseio.com", 
-        projectId: "pack-n-go-app", 
-        storageBucket: "pack-n-go-app.firebasestorage.app", 
-        messagingSenderId: "440398074655", 
-        appId: "1:440398074655:web:69ed87e2566fab0d50562a" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let courses = [], staff = {}, logs = [], userSession = "Deconnecte", activeAdminName = "", isAdminMode = false, isAdminPrincipal = false;
-    let selectedCourseId = null;
-
     const savedAdmin = localStorage.getItem('png_admin');
     const savedLivreur = localStorage.getItem('png_livreur');
     const savedTab = localStorage.getItem('png_tab');
 
-    if(savedAdmin) {
-        const d = JSON.parse(savedAdmin); 
-        isAdminMode = true; 
-        isAdminPrincipal = d.isPrincipal; 
-        activeAdminName = d.name;
-    } else if(savedLivreur) { 
-        userSession = savedLivreur; 
-    }
+    const firebaseConfig = { apiKey: "AIzaSyAtsxQHvSBIVvjjAA53BWN3pBdV58hMJEk", authDomain: "pack-n-go-app.firebaseapp.com", databaseURL: "https://pack-n-go-app-default-rtdb.firebaseio.com", projectId: "pack-n-go-app", storageBucket: "pack-n-go-app.firebasestorage.app", messagingSenderId: "440398074655", appId: "1:440398074655:web:69ed87e2566fab0d50562a" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    document.getElementById('dateRef').valueAsDate = new Date();
+    let courses = [], staff = {}, logs = [], userSession = "Deconnecte", activeAdminName = "", isAdminMode = false, isAdminPrincipal = false;
+    let selectedCourseId = null; // Pour WhatsApp
 
+    // ========== DÉTECTION HORS CONNEXION ==========
     function updateNetworkStatus() {
         if (!navigator.onLine) {
             let banner = document.getElementById('offline-banner');
@@ -198,7 +249,7 @@
                 banner = document.createElement('div');
                 banner.id = 'offline-banner';
                 banner.className = 'offline-banner';
-                banner.innerHTML = '⚠️ PAS DE CONNEXION ⚠️';
+                banner.innerHTML = '⚠️ PAS DE CONNEXION INTERNET - Données peuvent être obsolètes ⚠️';
                 document.body.prepend(banner);
             }
         } else {
@@ -210,118 +261,99 @@
     window.addEventListener('offline', updateNetworkStatus);
     updateNetworkStatus();
 
+    if(savedAdmin) {
+        const d = JSON.parse(savedAdmin); isAdminMode = true; isAdminPrincipal = d.isPrincipal; activeAdminName = d.name;
+    } else if(savedLivreur) { userSession = savedLivreur; }
+
+    document.getElementById('dateRef').valueAsDate = new Date();
+    
     db.ref('staff').on('value', snap => { 
-        staff = snap.val() || { "Admin": { mdp: "0612", role: "admin", telephone: "0612" } }; 
+        staff = snap.val() || { "Admin": { mdp: "0612", role: "admin" } }; 
         if(isAdminMode) {
             document.getElementById('sectionAdmin').classList.remove('hidden');
             document.getElementById('sectionLivreur').classList.add('hidden');
-            document.getElementById('adminTrigger').classList.add('hidden');
+            document.getElementById('btnAdmin').innerText = "DÉCONNEXION";
             if(!isAdminPrincipal) document.getElementById('btnNavRH').classList.add('hidden');
             if(savedTab) {
-                document.querySelectorAll('#tabCourses, #tabCompta, #tabRH').forEach(t => t.classList.add('hidden'));
-                document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
                 const target = document.getElementById(savedTab);
                 if(target) target.classList.remove('hidden');
-                const btn = Array.from(document.querySelectorAll('.admin-nav-btn')).find(b => b.getAttribute('onclick').includes(savedTab));
+                const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(savedTab));
                 if(btn) btn.classList.add('active');
             }
             nettoyerLogsAutomatique();
-        } else if(userSession !== "Deconnecte") {
-            document.getElementById('adminTrigger').classList.add('hidden');
-        } else {
-            document.getElementById('adminTrigger').classList.remove('hidden');
         }
         refreshAll(); 
     });
 
-    db.ref('courses').on('value', snap => { 
-        courses = []; 
-        snap.forEach(child => { 
-            courses.unshift({id: child.key, ...child.val()}); 
-        }); 
-        refreshAll(); 
-    });
-    
-    db.ref('logs').limitToLast(50).on('value', snap => { 
-        logs = []; 
-        snap.forEach(child => { 
-            logs.unshift(child.val()); 
-        }); 
-        refreshAll(); 
-    });
+    db.ref('courses').on('value', snap => { courses = []; snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); }); refreshAll(); });
+    db.ref('logs').limitToLast(50).on('value', snap => { logs = []; snap.forEach(child => { logs.unshift(child.val()); }); refreshAll(); });
 
+    // ========== WHATSAPP ==========
     function updateWhatsAppButton() {
         const btn = document.getElementById('whatsappBtn');
-        const tooltip = document.getElementById('whatsappTooltip');
-        
         if (!selectedCourseId) {
             btn.classList.add('disabled');
-            tooltip.classList.remove('hidden');
-            tooltip.innerText = 'Cliquez sur une course';
-            btn.onclick = null;
             return;
         }
-        
         const course = courses.find(c => c.id === selectedCourseId);
         if (!course) {
             btn.classList.add('disabled');
-            tooltip.innerText = 'Course introuvable';
-            btn.onclick = null;
             return;
         }
         
         let phoneNumber = null;
-        let contactName = "";
-        
         if (userSession !== "Deconnecte" && !isAdminMode) {
+            // Livreur connecté -> appeler l'admin qui a créé la course
             const adminName = course.creePar;
             if (adminName && staff[adminName] && staff[adminName].telephone) {
                 phoneNumber = staff[adminName].telephone;
-                contactName = adminName;
             }
-        }
-        else if (isAdminMode) {
+        } else if (isAdminMode) {
+            // Admin connecté -> appeler le livreur de la course
             const livreurName = course.livreur;
             if (livreurName && staff[livreurName] && staff[livreurName].telephone) {
                 phoneNumber = staff[livreurName].telephone;
-                contactName = livreurName;
             }
         }
         
         if (phoneNumber) {
             btn.classList.remove('disabled');
-            let cleanNumber = phoneNumber.toString().replace(/\D/g, '');
-            if (!cleanNumber.startsWith('228') && cleanNumber.length <= 8) {
-                cleanNumber = '228' + cleanNumber;
-            }
-            btn.onclick = () => {
-                window.open(`https://wa.me/${cleanNumber}`, '_blank');
-            };
-            tooltip.classList.remove('hidden');
-            tooltip.innerText = `📞 Appeler ${contactName}`;
+            btn.setAttribute('data-phone', phoneNumber);
         } else {
             btn.classList.add('disabled');
-            tooltip.classList.remove('hidden');
-            tooltip.innerText = `📱 Pas de numéro`;
-            btn.onclick = null;
+            btn.removeAttribute('data-phone');
         }
     }
-
+    
+    function appelerContact() {
+        const btn = document.getElementById('whatsappBtn');
+        const phone = btn.getAttribute('data-phone');
+        if (!phone) return;
+        let cleanNumber = phone.toString().replace(/\D/g, '');
+        if (!cleanNumber.startsWith('228') && cleanNumber.length <= 8) {
+            cleanNumber = '228' + cleanNumber;
+        }
+        window.open(`https://wa.me/${cleanNumber}`, '_blank');
+    }
+    
     function selectCourse(courseId) {
         selectedCourseId = courseId;
-        updateWhatsAppButton();
-        document.querySelectorAll('.course-item').forEach(el => {
-            if (el.dataset.id === courseId) {
+        // Mettre à jour l'affichage
+        document.querySelectorAll('.course-selectable').forEach(el => {
+            if (el.getAttribute('data-id') === courseId) {
                 el.classList.add('selected');
             } else {
                 el.classList.remove('selected');
             }
         });
+        updateWhatsAppButton();
     }
 
     function authAdmin() {
         if(isAdminMode) { localStorage.clear(); location.reload(); return; }
-        let p = prompt("Code accès :"); 
+        let p = prompt("CODE ACCÈS :"); 
         if(!p) return;
         if(p === "0612") { 
             localStorage.setItem('png_admin', JSON.stringify({name: "Admin Principal", isPrincipal: true}));
@@ -337,9 +369,9 @@
     }
 
     function switchTab(tabId) {
-        document.querySelectorAll('#tabCourses, #tabCompta, #tabRH').forEach(t => t.classList.add('hidden'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.remove('hidden');
-        document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
         event.currentTarget.classList.add('active');
         if(isAdminMode) localStorage.setItem('png_tab', tabId);
         selectedCourseId = null;
@@ -347,22 +379,15 @@
     }
 
     function connexionLivreur() {
-        const s = document.getElementById('loginLivreur'); 
-        if(s.value === "Tous") return;
-        if(prompt(`Code ${s.value} :`) === staff[s.value].mdp) {
-            userSession = s.value; 
-            localStorage.setItem('png_livreur', userSession); 
-            document.getElementById('adminTrigger').classList.add('hidden');
+        const s = document.getElementById('loginLivreur'); if(s.value === "Tous") return;
+        if(prompt(`CODE ${s.value} :`) === staff[s.value].mdp) {
+            userSession = s.value; localStorage.setItem('png_livreur', userSession); 
             selectedCourseId = null;
             refreshAll();
-        } else { 
-            s.value = "Tous"; 
-        }
+        } else { s.value = "Tous"; }
     }
 
-    function tracerAction(action) { 
-        db.ref('logs').push({ date: new Date().toLocaleString('fr-FR'), auteur: activeAdminName || "Système", details: action }); 
-    }
+    function tracerAction(action) { db.ref('logs').push({ date: new Date().toLocaleString('fr-FR'), auteur: activeAdminName || "Système", details: action }); }
     
     function nettoyerLogsAutomatique() {
         if (!isAdminPrincipal) return;
@@ -374,17 +399,17 @@
                 const dateAujourdhui = new Date().toLocaleDateString('fr-FR');
                 if (dateDernierLog !== dateAujourdhui) {
                     db.ref('logs').remove();
-                    tracerAction("Initialisation du journal");
+                    tracerAction("Initialisation du journal du jour");
                 }
             }
         });
     }
 
     function ajouterRH() { 
-        const n = document.getElementById('rh_nom').value.trim(); 
+        const n = document.getElementById('rh_nom').value.trim();
         const tel = document.getElementById('rh_telephone').value.trim();
-        const c = document.getElementById('rh_code').value; 
-        const r = document.getElementById('rh_role').value; 
+        const c = document.getElementById('rh_code').value;
+        const r = document.getElementById('rh_role').value;
         
         if(!n) { alert("Nom requis"); return; }
         if(!tel) { alert("Numéro WhatsApp requis"); return; }
@@ -392,7 +417,7 @@
         if(!r) { alert("Rôle requis"); return; }
         
         db.ref('staff/' + n).set({ mdp: c, role: r, telephone: tel }); 
-        tracerAction(`Ajout : ${n}`); 
+        tracerAction(`Ajout personnel : ${n}`); 
         document.getElementById('rh_nom').value = ''; 
         document.getElementById('rh_telephone').value = '';
         document.getElementById('rh_code').value = ''; 
@@ -400,48 +425,45 @@
     }
     
     function supprRH(n) {
-        // Vérifier si la personne a des courses actives (seulement si c'est un livreur)
         const estLivreur = staff[n] && staff[n].role && staff[n].role.startsWith('livreur');
         if (estLivreur) {
             const coursesActives = courses.filter(c => c.livreur === n && c.statut !== 'Livré' && c.statut !== 'Non Livré');
             if(coursesActives.length > 0) {
-                alert(`❌ Impossible : ${n} a ${coursesActives.length} course(s) en cours`);
+                alert(`❌ Impossible de supprimer ${n} : ${coursesActives.length} course(s) en cours.`);
                 return;
             }
         }
-        
         if(confirm(`Supprimer ${n} définitivement ?`)) { 
             db.ref('staff/' + n).remove(); 
-            tracerAction(`Suppression : ${n}`); 
+            tracerAction(`Suppression personnel : ${n}`); 
             alert(`✅ ${n} supprimé`);
         }
     }
     
     function creerCourse() { 
-        const c = document.getElementById('c_client').value.trim(); 
-        const t = document.getElementById('c_tarif').value; 
-        const d = document.getElementById('c_dest').value.trim(); 
-        const l = document.getElementById('c_livreur').value; 
-        const h = document.getElementById('c_heure').value; 
+        const c = document.getElementById('c_client').value.trim();
+        const t = document.getElementById('c_tarif').value;
+        const d = document.getElementById('c_dest').value.trim();
+        const l = document.getElementById('c_livreur').value;
+        const h = document.getElementById('c_heure').value;
         
-        if(!c) { alert("Nom du client requis"); return; }
+        if(!c) { alert("Client requis"); return; }
         if(!t) { alert("Tarif requis"); return; }
         if(!l) { alert("Sélectionnez un livreur"); return; }
         
         db.ref('courses').push({ 
-            date: new Date().toISOString().split('T')[0], 
-            client: c, 
-            dest: d || "Non spécifié", 
-            tarif: parseInt(t), 
-            livreur: l, 
-            heure: h || "", 
-            statut: 'Attente', 
+            date: new Date().toISOString().split('T')[0],
+            client: c,
+            dest: d || "Non spécifié",
+            tarif: parseInt(t),
+            livreur: l,
+            heure: h || "",
+            statut: 'Attente',
             modifiee: false,
             creePar: activeAdminName || "Admin"
         }); 
-        tracerAction(`Création : ${c}`); 
+        tracerAction(`Création course : ${c}`); 
         annulerModif(); 
-        alert(`✅ Course créée pour ${l}`);
     }
     
     function modifierCourse(id) { 
@@ -452,7 +474,7 @@
         document.getElementById('c_tarif').value = c.tarif; 
         document.getElementById('c_livreur').value = c.livreur; 
         document.getElementById('c_heure').value = c.heure || ""; 
-        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-warning" onclick="sauvegarderModif('${id}')">Mettre à jour</button><button class="btn btn-outline" onclick="annulerModif()">Annuler</button>`; 
+        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-orange" onclick="sauvegarderModif('${id}')">METTRE À JOUR</button><button class="btn btn-black" style="background:#888" onclick="annulerModif()">ANNULER</button>`; 
         window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
     
@@ -466,7 +488,7 @@
             heure: document.getElementById('c_heure').value, 
             modifiee: true 
         }); 
-        tracerAction(`Modif : ${cn}`); 
+        tracerAction(`Modif/Reprog course : ${cn}`); 
         annulerModif(); 
     }
     
@@ -475,7 +497,7 @@
         document.getElementById('c_dest').value = ''; 
         document.getElementById('c_tarif').value = ''; 
         document.getElementById('c_heure').value = ''; 
-        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-primary" onclick="creerCourse()">+ Programmer</button>`; 
+        document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>`; 
         refreshAll(); 
     }
     
@@ -483,42 +505,23 @@
         if(confirm("Supprimer cette course ?")) {
             db.ref('courses/' + id).remove();
             if(selectedCourseId === id) selectedCourseId = null;
-            tracerAction("Suppression course");
         }
     }
     
     function changerStatut(id, s) { 
-        if(confirm(`Passer en "${s}" ?`)) {
-            db.ref('courses/' + id).update({ statut: s });
-            tracerAction(`Statut : ${s}`);
-        }
-    }
-
-    function deconnexion() { 
-        localStorage.clear(); 
-        location.reload(); 
+        if(confirm("Confirmer le statut ?")) db.ref('courses/' + id).update({ statut: s }); 
     }
 
     function refreshAll() {
-        const l_rh = document.getElementById('listeRH'); 
-        const s_rh = document.getElementById('c_livreur'); 
-        const s_log = document.getElementById('loginLivreur'); 
-        const live = document.getElementById('suiviLive'); 
-        const l_liv = document.getElementById('listeCoursesLivreur'); 
-        const statusArea = document.getElementById('sessionStatus'); 
-        const logCard = document.getElementById('loginCard');
+        const l_rh = document.getElementById('listeRH'), s_rh = document.getElementById('c_livreur'), s_log = document.getElementById('loginLivreur'), live = document.getElementById('suiviLive'), l_liv = document.getElementById('listeCoursesLivreur'), statusArea = document.getElementById('sessionStatus'), logCard = document.getElementById('loginCard');
         const auj = new Date().toISOString().split('T')[0];
-        
-        if(l_rh) l_rh.innerHTML = ''; 
-        if(s_rh) s_rh.innerHTML = '<option value="">-- Assigner à --</option>'; 
-        if(s_log) s_log.innerHTML = '<option value="Tous">-- Identifiez-vous --</option>'; 
-        if(live) live.innerHTML = ''; 
-        if(l_liv) l_liv.innerHTML = '';
+        if(l_rh) l_rh.innerHTML = ''; s_rh.innerHTML = '<option>NON ASSIGNÉ</option>'; s_log.innerHTML = '<option value="Tous">-- IDENTIFIEZ-VOUS --</option>'; live.innerHTML = ''; l_liv.innerHTML = '';
         
         if(isAdminMode) { 
-            let label = isAdminPrincipal ? activeAdminName : `Admin : ${activeAdminName}`;
-            statusArea.innerHTML = `<div class="session-card"><div><h3>${label}</h3><p>Dashboard</p></div><div class="logout-btn" onclick="deconnexion()">Déconnexion</div></div>`; 
-            if(logCard) logCard.classList.add('hidden'); 
+            let label = isAdminPrincipal ? activeAdminName : `ADMIN : ${activeAdminName}`;
+            let subtext = isAdminPrincipal ? "Contrôle Dashboard" : "Gestion Flux";
+            statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${label}</span><span class="session-count">${subtext}</span></div></div>`; 
+            logCard.classList.add('hidden'); 
         }
         else if(userSession !== "Deconnecte") { 
             const sc = courses.filter(c => c.livreur === userSession && c.statut === 'Livré' && c.date === auj).length;
@@ -527,80 +530,53 @@
             const gainsLivreur = totalF - partPack;
 
             statusArea.innerHTML = `
-                <div class="session-card">
-                    <div><h3>Livreur : ${userSession}</h3><p>Livrées : ${sc}</p></div>
-                    <div class="logout-btn" onclick="deconnexion()">Déconnexion</div>
+                <div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
+                    <div class="session-info" style="text-align: left; align-items: flex-start;">
+                        <span class="session-label">LIVREUR : ${userSession}</span>
+                        <span class="session-count">Livrée(s) aujourd'hui : ${sc}</span>
+                    </div>
+                    <span class="logout-link" onclick="deconnexion()">Déconnexion</span>
                 </div>
-                <div class="gains-card"><span>💰 Gains du jour</span><span>${gainsLivreur} F</span></div>`; 
-            if(logCard) logCard.classList.add('hidden'); 
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-left: 6px solid var(--done); margin-bottom: 20px;">
+                    <span style="font-size: 0.8rem; font-weight: 800;">Gains du jour</span>
+                    <span style="background: var(--done); color: white; padding: 6px 12px; border-radius: 4px; font-size: 1rem; font-weight: 800;">${gainsLivreur} F</span>
+                </div>`; 
+            logCard.classList.add('hidden'); 
         }
-        else { 
-            if(statusArea) statusArea.innerHTML = ''; 
-            if(logCard) logCard.classList.remove('hidden'); 
-        }
+        else { statusArea.innerHTML = ''; logCard.classList.remove('hidden'); }
         
         for(let u in staff) { 
             if(u === "Admin") continue; 
             let rL = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe'); 
-            let telInfo = staff[u].telephone ? `📞 ${staff[u].telephone}` : '⚠️ Pas de numéro';
-            if(l_rh) l_rh.innerHTML += `<div class="user-row"><span><strong>${u}</strong><br><span style="font-size:0.65rem;">${rL} | ${telInfo}</span></span><div onclick="supprRH('${u}')" style="color:#e63946; cursor:pointer; font-size:1.2rem;">×</div></div>`; 
+            let telInfo = staff[u].telephone ? `📞` : '⚠️';
+            if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rL} ${telInfo}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`; 
             if(staff[u].role && staff[u].role.startsWith('livreur')) { 
-                if(s_rh) s_rh.innerHTML += `<option value="${u}">${u}</option>`; 
-                if(s_log) s_log.innerHTML += `<option value="${u}">${u}</option>`; 
+                s_rh.innerHTML += `<option value="${u}">${u}</option>`; 
+                s_log.innerHTML += `<option value="${u}">${u}</option>`; 
             } 
         }
         
         let tC = 0;
         courses.forEach(c => {
-            if (c.date === auj && live) {
+            if (c.date === auj) {
                 tC++;
-                let badgeClass = 'badge-attente';
-                if(c.statut === 'Livré') badgeClass = 'badge-livre';
-                else if(c.statut === 'En cours') badgeClass = 'badge-cours';
-                else if(c.statut === 'Non Livré') badgeClass = 'badge-echec';
-                
-                let act = (isAdminMode && c.statut !== 'Livré') ? `<div style="display:flex; gap:8px; margin-top:8px;"><button class="btn btn-outline" style="flex:1;" onclick="modifierCourse('${c.id}')">✏️ Modifier</button><button class="btn btn-danger" style="flex:1;" onclick="supprimerCourse('${c.id}')">🗑️ Supprimer</button></div>` : '';
-                
-                live.innerHTML += `
-                    <div class="course-item" data-id="${c.id}" onclick="selectCourse('${c.id}')">
-                        <div class="course-header">
-                            <strong>${c.client}</strong>
-                            <span class="badge ${badgeClass}">${c.statut}</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:#666; margin:6px 0;">${c.dest} • ${c.heure || '--:--'}</div>
-                        <div style="font-size:0.8rem;"><strong>${c.tarif} F</strong> • ${c.livreur}</div>
-                        ${act}
-                    </div>`;
+                let sC = c.statut === 'Livré' ? 's-livre' : (c.statut === 'En cours' ? 's-cours' : (c.statut === 'Non Livré' ? 's-echec' : 's-attente'));
+                let act = (isAdminMode && c.statut !== 'Livré') ? `<div style="display: flex; gap: 10px; margin-left: 10px; font-size: 1rem;"><span onclick="modifierCourse('${c.id}')" style="cursor:pointer;">📝</span><span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;">🗑️</span></div>` : '';
+                live.innerHTML += `<div class="suivi-row course-selectable" data-id="${c.id}" onclick="selectCourse('${c.id}')"><div class="suivi-info"><span class="suivi-client">${c.client} <span style="color:var(--accent);">${c.heure||''}</span></span><span class="suivi-sub">${c.livreur} • ${c.tarif} F</span></div><div style="display: flex; align-items: center;">${c.modifiee?'🔄':''}<span class="statut-pill ${sC}">${c.statut}</span>${act}</div></div>`;
             }
-            
-            if(userSession !== "Deconnecte" && !isAdminMode && c.livreur === userSession && c.statut !== 'Livré' && c.statut !== 'Non Livré' && l_liv) {
-                let actionsHtml = '';
-                if(c.statut === 'Attente') {
-                    actionsHtml = `<button class="btn btn-warning" onclick="changerStatut('${c.id}', 'En cours')">✅ Accepter</button>`;
-                } else {
-                    actionsHtml = `<div style="display:flex; gap:8px;"><button class="btn btn-success" onclick="changerStatut('${c.id}', 'Livré')">📦 Livrée</button><button class="btn btn-danger" onclick="changerStatut('${c.id}', 'Non Livré')">❌ Échec</button></div>`;
-                }
-                
-                l_liv.innerHTML += `
-                    <div class="course-item" data-id="${c.id}" onclick="selectCourse('${c.id}')">
-                        <div class="course-header">
-                            <strong>${c.client}</strong>
-                            <span class="course-price">${c.tarif} F</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:#666; margin:6px 0;">📍 ${c.dest}</div>
-                        ${actionsHtml}
-                        <div style="font-size:0.65rem; color:#888; margin-top:8px;">👤 ${c.creePar || '?'}</div>
-                    </div>`;
+            if(userSession !== "Deconnecte" && c.livreur === userSession && c.statut !== 'Livré' && c.statut !== 'Non Livré') {
+                let ct = `<div class="livreur-line"><span class="livreur-client-name">${c.client} <span style="color:var(--accent);">${c.tarif}F</span></span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
+                ct += (c.statut === 'Attente') ? `<button class="btn btn-orange" onclick="changerStatut('${c.id}', 'En cours')">ACCEPTER</button>` : `<div style="display:flex; gap:10px;"><button class="btn btn-green" style="flex:2" onclick="changerStatut('${c.id}', 'Livré')">LIVRÉ</button><button class="btn btn-red" style="flex:1" onclick="changerStatut('${c.id}', 'Non Livré')">ÉCHEC</button></div>`;
+                l_liv.innerHTML += `<div class="card course-selectable" data-id="${c.id}" onclick="selectCourse('${c.id}')">${ct}<div style="font-size:0.6rem; color:#888; margin-top:8px;">👤 ${c.creePar || 'Admin'}</div></div>`;
             }
         });
-        
-        if(document.getElementById('countCourses')) document.getElementById('countCourses').innerText = tC;
+        document.getElementById('countCourses').innerText = tC;
 
         if (isAdminPrincipal) {
             const logsCont = document.getElementById('logsContainer');
             if(logsCont) {
                 logsCont.classList.remove('hidden');
-                document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0;">[${l.date}] <b>${l.auteur}</b> : ${l.details}</div>`).join('');
+                document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #eee;"><span style="color:var(--accent)">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
             }
         }
         renderCompta();
@@ -608,36 +584,32 @@
     }
 
     function renderCompta() {
-        const ty = document.getElementById('typeFiltre').value;
-        const re = new Date(document.getElementById('dateRef').value);
+        const ty = document.getElementById('typeFiltre').value, re = new Date(document.getElementById('dateRef').value);
         let bi = {}, de = {}, co = {};
         courses.filter(c => c.statut === 'Livré').forEach(c => {
             const d = new Date(c.date);
-            if((ty === 'jour' && d.toDateString() === re.toDateString()) || 
-               (ty === 'semaine' && (re - d) / 86400000 < 7 && (re - d) >= 0) || 
-               (ty === 'mois' && d.getMonth() === re.getMonth() && d.getFullYear() === re.getFullYear())) {
-                bi[c.livreur] = (bi[c.livreur] || 0) + c.tarif; 
-                co[c.livreur] = (co[c.livreur] || 0) + 1;
-                if(!de[c.livreur]) de[c.livreur] = []; 
-                de[c.livreur].push(c);
+            if((ty === 'jour' && d.toDateString() === re.toDateString()) || (ty === 'semaine' && (re - d) / 86400000 < 7 && (re - d) >= 0) || (ty === 'mois' && d.getMonth() === re.getMonth() && d.getFullYear() === re.getFullYear())) {
+                bi[c.livreur] = (bi[c.livreur] || 0) + c.tarif; co[c.livreur] = (co[c.livreur] || 0) + 1;
+                if(!de[c.livreur]) de[c.livreur] = []; de[c.livreur].push(c);
             }
         });
-        let h = `<table class="fin-table"><tr><th>Nom</th><th>Total</th><th>Gains</th><th>Pack'n Go</th></tr>`, tT=0, tG=0, tP=0;
+        let h = `<table class="fin-table"><tr><th>NOM</th><th>TOTAL</th><th>GAINS</th><th>P'GO</th></tr>`, tT=0, tG=0, tP=0;
         for(let n in bi) {
             let pP = (staff[n] && staff[n].role === 'livreur_packngo') ? Math.round(bi[n]*0.7) : Math.round(bi[n]*0.3);
             let pL = bi[n] - pP; tT+=bi[n]; tG+=pL; tP+=pP;
             h += `<tr><td>${n}</td><td>${bi[n]}</td><td>${pL}</td><td>${pP}</td></tr>`;
         }
-        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bi).length ? h + `<tr class="total-row"><tr>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr></table>` : "<p style='text-align:center;padding:20px;'>Aucune donnée</p>";
-        
+        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bi).length ? h + `<tr class="total-row"><td>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr>` : "<p style='text-align:center;padding:20px'>Vide</p>";
         let dH = "";
         for(let n in de) {
-            dH += `<div style="margin-bottom:25px;"><div class="section-title">${n} (${co[n]} courses)</div>`;
-            de[n].forEach(c => { dH += `<div style="padding:8px 0; border-bottom:1px solid #f0f0f0;"><strong>${c.client}</strong> - ${c.dest} - ${c.tarif} F</div>`; });
+            dH += `<div style="margin-bottom:25px;"><div class="detail-header"><span class="detail-name">${n}</span><div><span class="count-number">${co[n]}</span></div></div>`;
+            de[n].forEach(c => { dH += `<div class="compta-detail-row"><span><b>${c.client}</b> (${c.dest})</span><b>${c.tarif} F</b></div>`; });
             dH += `</div>`;
         }
-        document.getElementById('detailsComptaContainer').innerHTML = dH || "<p style='text-align:center;padding:20px;'>Aucun détail</p>";
+        document.getElementById('detailsComptaContainer').innerHTML = dH || "<p style='text-align:center;padding:20px'>Vide</p>";
     }
+    
+    function deconnexion() { localStorage.clear(); location.reload(); }
 </script>
 </body>
 </html>
