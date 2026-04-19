@@ -11,97 +11,253 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="theme-color" content="#000000">
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Police moderne -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        :root { --accent: #e63946; --dark: #000; --bg: #fafafa; --done: #1db954; --process: #f39c12; --fail: #e63946; }
-        * { box-sizing: border-box; }
-        
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; color: var(--dark); overflow-x: hidden; }
-        
-        .wrapper { max-width: 1000px; margin: auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
-        @media (max-width: 600px) { .wrapper { max-width: 500px; } }
-        
-        header { text-align: center; background: var(--dark); padding: 15px; border-bottom: 8px solid var(--accent); }
-        header img { height: 90px; width: auto; object-fit: contain; }
-        
-        .container { padding: 15px; padding-bottom: 80px; width: 100%; }
-        .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #eee; width: 100%; }
-        
-        input, select { width: 100%; display: block; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 0.85rem; }
-        
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-family: inherit; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: all 0.3s; margin-top: 5px; }
-        .btn-black { background: var(--dark); color: white; }
-        .btn-red { background: var(--accent); color: white; }
-        .btn-orange { background: var(--process); color: white; }
-        .btn-green { background: var(--done); color: white; }
+        /* ========== DESIGN MODERNE ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        .session-badge { display: flex; background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 6px solid var(--accent); }
-        .session-info { display: flex; flex-direction: column; gap: 5px; }
-        .session-label { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; color: var(--dark); }
-        .session-count { font-size: 0.75rem; color: #555; font-weight: 600; }
-        
-        .logout-link { font-size: 0.7rem; color: var(--fail); cursor: pointer; text-transform: uppercase; font-weight: 700; border: 1.5px solid var(--fail); padding: 6px 10px; border-radius: 4px; }
-        
-        .nav-admin { display: flex; background: #eee; gap: 2px; width: 100%; }
-        .nav-btn { flex: 1; padding: 12px; border: none; background: #ddd; font-size: 0.55rem; font-weight: 700; cursor: pointer; text-transform: uppercase; }
-        .nav-btn.active { background: #fff; border-bottom: 3px solid var(--accent); }
-        
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-left: 3px solid var(--accent); padding-left: 8px; }
-        .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .statut-pill { display: inline-block; min-width: 75px; text-align: center; font-size: 0.55rem; padding: 4px 0; border-radius: 4px; font-weight: 800; text-transform: uppercase; }
-        .s-attente { background: #eee; color: #666; }
-        .s-cours { background: #fff3e0; color: var(--process); }
-        .s-livre { background: #e8f5e9; color: var(--done); }
-        .s-echec { background: #ffebee; color: var(--fail); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            padding-bottom: 80px;
+        }
 
-        .suivi-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
-        .suivi-info { display: flex; flex-direction: column; gap: 2px; }
-        .suivi-client { font-size: 0.85rem; font-weight: 700; }
-        .suivi-sub { font-size: 0.65rem; color: #777; }
+        /* Header */
+        .header {
+            background: #0a0a0a;
+            padding: 16px 20px;
+            text-align: center;
+            border-bottom: 3px solid #e63946;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header img {
+            height: 60px;
+            object-fit: contain;
+        }
 
-        .user-tag { display: grid; grid-template-columns: 140px 1fr auto; gap: 15px; align-items: center; padding: 12px 10px; background: #f9f9f9; margin-bottom: 5px; border-radius: 4px; font-size: 0.85rem; }
-        .hidden { display: none !important; }
-        .admin-trigger { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--dark); color: #fff; padding: 10px 20px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; z-index: 1000; }
-        
-        .livreur-line { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 10px; align-items: center; }
-        .livreur-client-name { font-size: 0.85rem; font-weight: 700; }
-        .livreur-loc { color: var(--dark); font-weight: 700; font-size: 0.85rem; }
+        /* Container */
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
 
-        .fin-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; }
-        .fin-table th { padding: 10px 2px; color: #888; text-align: center; }
-        .fin-table td { padding: 12px 2px; text-align: center; font-weight: 700; }
-        .total-row { background: var(--dark); color: #fff; }
-        
+        /* Cartes modernes */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #eef2ff;
+            transition: transform 0.1s ease;
+        }
+
+        /* Titres de section */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-left: 3px solid #e63946;
+            padding-left: 12px;
+        }
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #e63946;
+        }
+
+        /* Champs de formulaire */
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            background: white;
+            transition: 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #e63946;
+            box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
+        }
+
+        /* Boutons */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 6px;
+        }
+        .btn-black { background: #0f172a; color: white; }
+        .btn-black:hover { background: #e63946; transform: translateY(-1px); }
+        .btn-red { background: #e63946; color: white; }
+        .btn-orange { background: #f97316; color: white; }
+        .btn-green { background: #10b981; color: white; }
+
+        /* Badges de statut */
+        .statut-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .s-attente { background: #f1f5f9; color: #475569; }
+        .s-cours { background: #ffedd5; color: #f97316; }
+        .s-livre { background: #dcfce7; color: #10b981; }
+        .s-echec { background: #fee2e2; color: #e63946; }
+
+        /* Session cards */
+        .session-badge {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-left: 6px solid #e63946;
+        }
+        .session-label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #0f172a;
+        }
+        .session-count {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+        .logout-link {
+            font-size: 0.65rem;
+            color: #e63946;
+            cursor: pointer;
+            font-weight: 700;
+            border: 1.5px solid #e63946;
+            padding: 6px 12px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+
+        /* Navigation admin */
+        .nav-admin {
+            display: flex;
+            background: white;
+            border-radius: 60px;
+            padding: 4px;
+            margin-bottom: 20px;
+            gap: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-btn.active {
+            background: #0f172a;
+            color: white;
+        }
+
+        /* Lignes de suivi */
+        .suivi-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .suivi-row:hover {
+            background: #f8fafc;
+        }
+        .suivi-row.selected {
+            background: #fff1f0;
+            border-radius: 12px;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        .suivi-client {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .suivi-sub {
+            font-size: 0.65rem;
+            color: #64748b;
+        }
+
+        /* Liste personnel */
+        .user-tag {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
         /* WhatsApp flottant */
         .whatsapp-float {
             position: fixed;
-            bottom: 80px;
+            bottom: 20px;
             right: 20px;
-            width: 55px;
-            height: 55px;
+            width: 56px;
+            height: 56px;
             background: #25D366;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             cursor: pointer;
             z-index: 1000;
             border: none;
             font-size: 28px;
             color: white;
+            transition: 0.2s;
         }
         .whatsapp-float.disabled {
-            background: #aaa;
+            background: #94a3b8;
             cursor: not-allowed;
-            opacity: 0.6;
+            opacity: 0.7;
         }
-        
+        .whatsapp-float:active {
+            transform: scale(0.95);
+        }
+
         /* Bannière hors connexion */
         .offline-banner {
             position: fixed;
@@ -113,123 +269,158 @@
             text-align: center;
             padding: 10px;
             font-size: 0.7rem;
-            font-weight: bold;
+            font-weight: 700;
             z-index: 9999;
         }
-        
-        .course-selectable {
+
+        /* Bouton accès admin */
+        .admin-trigger {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .course-selectable.selected {
-            border: 2px solid #e63946;
-            background: #fff5f5;
+        .admin-trigger:hover {
+            background: #e63946;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Table comptabilité */
+        .fin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+        }
+        .fin-table th, .fin-table td {
+            padding: 10px 4px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .total-row {
+            background: #0f172a;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <header>
-        <img src="logo.png" alt="Pack'n Go">
-    </header>
-
-    <div class="container">
-        <div id="sessionStatus"></div> 
-
-        <div id="sectionLivreur">
-            <div class="card" id="loginCard">
-                <div class="section-header"><div class="section-title">Espace Travail</div></div>
-                <select id="loginLivreur" onchange="connexionLivreur()">
-                    <option value="Tous">-- IDENTIFIEZ-VOUS --</option>
-                </select>
-            </div>
-            <div id="listeCoursesLivreur"></div>
-        </div>
-
-        <div id="sectionAdmin" class="hidden">
-            <nav class="nav-admin no-print">
-                <button class="nav-btn active" onclick="switchTab('tabCourses')">Courses</button>
-                <button class="nav-btn" onclick="switchTab('tabCompta')">Comptabilité</button>
-                <button id="btnNavRH" class="nav-btn" onclick="switchTab('tabRH')">Ressources H.</button>
-            </nav>
-
-            <div id="tabCourses" class="tab-content">
-                <div class="card no-print">
-                    <div class="section-header"><div class="section-title">Gestion Course</div></div>
-                    <input type="text" id="c_client" placeholder="CLIENT">
-                    <input type="text" id="c_dest" placeholder="DESTINATION">
-                    <div style="display: flex; gap:10px;">
-                        <input type="number" id="c_tarif" placeholder="TARIF" step="500">
-                        <input type="time" id="c_heure">
-                    </div>
-                    <select id="c_livreur"></select>
-                    <div id="formActionContainer">
-                        <button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="section-header">
-                        <div class="section-title">Suivi Live (Aujourd'hui)</div>
-                        <div id="countCourses" style="font-size: 0.6rem; background: #eee; padding: 2px 8px; border-radius: 10px;">0</div>
-                    </div>
-                    <div id="suiviLive"></div>
-                </div>
-            </div>
-
-            <div id="tabCompta" class="tab-content hidden">
-                <div class="card">
-                    <div class="section-header"><div class="section-title">Bilan Financier Global</div></div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
-                        <select id="typeFiltre" onchange="renderCompta()">
-                            <option value="jour">JOUR</option>
-                            <option value="semaine">SEMAINE</option>
-                            <option value="mois">MOIS</option>
-                        </select>
-                        <input type="date" id="dateRef" onchange="renderCompta()">
-                    </div>
-                    <div id="tableComptaContainer"></div>
-                </div>
-                <div class="card">
-                    <div class="section-header"><div class="section-title">Détails par Livreur</div></div>
-                    <div id="detailsComptaContainer"></div>
-                    <button class="btn btn-red no-print" style="margin-top: 15px;" onclick="window.print()">IMPRIMER</button>
-                </div>
-            </div>
-
-            <div id="tabRH" class="tab-content hidden">
-                <div class="card">
-                    <div class="section-header"><div class="section-title">Ajouter un Membre</div></div>
-                    <input type="text" id="rh_nom" placeholder="NOM COMPLET">
-                    <input type="tel" id="rh_telephone" placeholder="NUMÉRO WHATSAPP (ex: 90123456)">
-                    <input type="password" id="rh_code" placeholder="CODE SECRET">
-                    <select id="rh_role">
-                        <option value="" disabled selected>-- CHOISIR LE RÔLE --</option>
-                        <option value="livreur_packngo">Livreur Pack'n Go</option>
-                        <option value="livreur_externe">Livreur Externe</option>
-                        <option value="admin">Administrateur Adjoint</option>
-                    </select>
-                    <button class="btn btn-black" onclick="ajouterRH()">ENREGISTRER</button>
-                </div>
-                <div class="card">
-                    <div class="section-header"><div class="section-title">Liste du personnel</div></div>
-                    <div id="listeRH"></div>
-                </div>
-                <div id="logsContainer" class="card hidden">
-                    <div class="section-header"><div class="section-title">Journal d'activités</div></div>
-                    <div id="listeLogs" style="font-size: 0.65rem; max-height: 250px; overflow-y: auto;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-trigger no-print" onclick="authAdmin()" id="btnAdmin">ACCÈS ADMIN</div>
-    </div>
+<div class="header no-print">
+    <img src="logo.png" alt="Pack'n Go">
 </div>
 
-<!-- Bouton WhatsApp flottant -->
+<div class="container">
+    <div id="sessionStatus"></div>
+
+    <div id="sectionLivreur">
+        <div class="card" id="loginCard">
+            <div class="section-header"><div class="section-title">Espace Travail</div></div>
+            <select id="loginLivreur" onchange="connexionLivreur()">
+                <option value="Tous">-- IDENTIFIEZ-VOUS --</option>
+            </select>
+        </div>
+        <div id="listeCoursesLivreur"></div>
+    </div>
+
+    <div id="sectionAdmin" class="hidden">
+        <nav class="nav-admin no-print">
+            <button class="nav-btn active" onclick="switchTab('tabCourses')">Courses</button>
+            <button class="nav-btn" onclick="switchTab('tabCompta')">Comptabilité</button>
+            <button id="btnNavRH" class="nav-btn" onclick="switchTab('tabRH')">Ressources H.</button>
+        </nav>
+
+        <div id="tabCourses" class="tab-content">
+            <div class="card no-print">
+                <div class="section-header"><div class="section-title">Gestion Course</div></div>
+                <input type="text" id="c_client" placeholder="CLIENT">
+                <input type="text" id="c_dest" placeholder="DESTINATION">
+                <div style="display: flex; gap:10px;">
+                    <input type="number" id="c_tarif" placeholder="TARIF" step="500">
+                    <input type="time" id="c_heure">
+                </div>
+                <select id="c_livreur"></select>
+                <div id="formActionContainer">
+                    <button class="btn btn-black" onclick="creerCourse()">PROGRAMMER</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title">Suivi Live (Aujourd'hui)</div>
+                    <div id="countCourses" style="background:#f1f5f9; padding:2px 8px; border-radius:40px; font-size:0.7rem;">0</div>
+                </div>
+                <div id="suiviLive"></div>
+            </div>
+        </div>
+
+        <div id="tabCompta" class="tab-content hidden">
+            <div class="card">
+                <div class="section-header"><div class="section-title">Bilan Financier Global</div></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <select id="typeFiltre" onchange="renderCompta()">
+                        <option value="jour">JOUR</option>
+                        <option value="semaine">SEMAINE</option>
+                        <option value="mois">MOIS</option>
+                    </select>
+                    <input type="date" id="dateRef" onchange="renderCompta()">
+                </div>
+                <div id="tableComptaContainer"></div>
+            </div>
+            <div class="card">
+                <div class="section-header"><div class="section-title">Détails par Livreur</div></div>
+                <div id="detailsComptaContainer"></div>
+                <button class="btn btn-black no-print" style="margin-top: 15px;" onclick="window.print()">IMPRIMER LE RAPPORT</button>
+            </div>
+        </div>
+
+        <div id="tabRH" class="tab-content hidden">
+            <div class="card">
+                <div class="section-header"><div class="section-title">Ajouter un Membre</div></div>
+                <input type="text" id="rh_nom" placeholder="NOM COMPLET">
+                <input type="tel" id="rh_telephone" placeholder="NUMÉRO WHATSAPP (ex: 90123456)">
+                <input type="password" id="rh_code" placeholder="CODE SECRET">
+                <select id="rh_role">
+                    <option value="" disabled selected>-- CHOISIR LE RÔLE --</option>
+                    <option value="livreur_packngo">Livreur Pack'n Go</option>
+                    <option value="livreur_externe">Livreur Externe</option>
+                    <option value="admin">Administrateur Adjoint</option>
+                </select>
+                <button class="btn btn-black" onclick="ajouterRH()">ENREGISTRER</button>
+            </div>
+            <div class="card">
+                <div class="section-header"><div class="section-title">Liste du personnel</div></div>
+                <div id="listeRH"></div>
+            </div>
+            <div id="logsContainer" class="card hidden">
+                <div class="section-header"><div class="section-title">Journal d'activités (Logs)</div></div>
+                <div id="listeLogs" style="font-size: 0.65rem; max-height: 250px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-trigger no-print" onclick="authAdmin()" id="btnAdmin">ACCÈS ADMIN</div>
+</div>
+
+<!-- Icône WhatsApp flottante -->
 <div id="whatsappBtn" class="whatsapp-float disabled" onclick="appelerContact()">💬</div>
 
 <script>
+    // ========== BASE ORIGINALE (validée par Koamivi) ==========
     const savedAdmin = localStorage.getItem('png_admin');
     const savedLivreur = localStorage.getItem('png_livreur');
     const savedTab = localStorage.getItem('png_tab');
@@ -239,9 +430,9 @@
     const db = firebase.database();
 
     let courses = [], staff = {}, logs = [], userSession = "Deconnecte", activeAdminName = "", isAdminMode = false, isAdminPrincipal = false;
-    let selectedCourseId = null; // Pour WhatsApp
+    let selectedCourseId = null;
 
-    // ========== DÉTECTION HORS CONNEXION ==========
+    // Détection hors connexion
     function updateNetworkStatus() {
         if (!navigator.onLine) {
             let banner = document.getElementById('offline-banner');
@@ -249,7 +440,7 @@
                 banner = document.createElement('div');
                 banner.id = 'offline-banner';
                 banner.className = 'offline-banner';
-                banner.innerHTML = '⚠️ PAS DE CONNEXION INTERNET - Données peuvent être obsolètes ⚠️';
+                banner.innerHTML = '⚠️ PAS DE CONNEXION INTERNET ⚠️';
                 document.body.prepend(banner);
             }
         } else {
@@ -290,7 +481,7 @@
     db.ref('courses').on('value', snap => { courses = []; snap.forEach(child => { courses.unshift({id: child.key, ...child.val()}); }); refreshAll(); });
     db.ref('logs').limitToLast(50).on('value', snap => { logs = []; snap.forEach(child => { logs.unshift(child.val()); }); refreshAll(); });
 
-    // ========== WHATSAPP ==========
+    // WhatsApp
     function updateWhatsAppButton() {
         const btn = document.getElementById('whatsappBtn');
         if (!selectedCourseId) {
@@ -302,22 +493,18 @@
             btn.classList.add('disabled');
             return;
         }
-        
         let phoneNumber = null;
         if (userSession !== "Deconnecte" && !isAdminMode) {
-            // Livreur connecté -> appeler l'admin qui a créé la course
             const adminName = course.creePar;
             if (adminName && staff[adminName] && staff[adminName].telephone) {
                 phoneNumber = staff[adminName].telephone;
             }
         } else if (isAdminMode) {
-            // Admin connecté -> appeler le livreur de la course
             const livreurName = course.livreur;
             if (livreurName && staff[livreurName] && staff[livreurName].telephone) {
                 phoneNumber = staff[livreurName].telephone;
             }
         }
-        
         if (phoneNumber) {
             btn.classList.remove('disabled');
             btn.setAttribute('data-phone', phoneNumber);
@@ -340,8 +527,7 @@
     
     function selectCourse(courseId) {
         selectedCourseId = courseId;
-        // Mettre à jour l'affichage
-        document.querySelectorAll('.course-selectable').forEach(el => {
+        document.querySelectorAll('.suivi-row, .card.course-selectable').forEach(el => {
             if (el.getAttribute('data-id') === courseId) {
                 el.classList.add('selected');
             } else {
@@ -410,18 +596,16 @@
         const tel = document.getElementById('rh_telephone').value.trim();
         const c = document.getElementById('rh_code').value;
         const r = document.getElementById('rh_role').value;
-        
         if(!n) { alert("Nom requis"); return; }
         if(!tel) { alert("Numéro WhatsApp requis"); return; }
         if(!c) { alert("Code secret requis"); return; }
         if(!r) { alert("Rôle requis"); return; }
-        
         db.ref('staff/' + n).set({ mdp: c, role: r, telephone: tel }); 
         tracerAction(`Ajout personnel : ${n}`); 
         document.getElementById('rh_nom').value = ''; 
         document.getElementById('rh_telephone').value = '';
         document.getElementById('rh_code').value = ''; 
-        alert(`✅ ${n} ajouté avec succès`);
+        alert(`✅ ${n} ajouté`);
     }
     
     function supprRH(n) {
@@ -446,11 +630,9 @@
         const d = document.getElementById('c_dest').value.trim();
         const l = document.getElementById('c_livreur').value;
         const h = document.getElementById('c_heure').value;
-        
         if(!c) { alert("Client requis"); return; }
         if(!t) { alert("Tarif requis"); return; }
         if(!l) { alert("Sélectionnez un livreur"); return; }
-        
         db.ref('courses').push({ 
             date: new Date().toISOString().split('T')[0],
             client: c,
@@ -520,7 +702,7 @@
         if(isAdminMode) { 
             let label = isAdminPrincipal ? activeAdminName : `ADMIN : ${activeAdminName}`;
             let subtext = isAdminPrincipal ? "Contrôle Dashboard" : "Gestion Flux";
-            statusArea.innerHTML = `<div class="session-badge" style="justify-content: center;"><div class="session-info" style="text-align: center;"><span class="session-label">${label}</span><span class="session-count">${subtext}</span></div></div>`; 
+            statusArea.innerHTML = `<div class="session-badge"><div class="session-info"><span class="session-label">${label}</span><span class="session-count">${subtext}</span></div></div>`; 
             logCard.classList.add('hidden'); 
         }
         else if(userSession !== "Deconnecte") { 
@@ -530,16 +712,16 @@
             const gainsLivreur = totalF - partPack;
 
             statusArea.innerHTML = `
-                <div class="session-badge" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
-                    <div class="session-info" style="text-align: left; align-items: flex-start;">
+                <div class="session-badge" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
                         <span class="session-label">LIVREUR : ${userSession}</span>
                         <span class="session-count">Livrée(s) aujourd'hui : ${sc}</span>
                     </div>
                     <span class="logout-link" onclick="deconnexion()">Déconnexion</span>
                 </div>
-                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-left: 6px solid var(--done); margin-bottom: 20px;">
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-left: 6px solid #10b981; margin-bottom: 20px;">
                     <span style="font-size: 0.8rem; font-weight: 800;">Gains du jour</span>
-                    <span style="background: var(--done); color: white; padding: 6px 12px; border-radius: 4px; font-size: 1rem; font-weight: 800;">${gainsLivreur} F</span>
+                    <span style="background: #10b981; color: white; padding: 6px 12px; border-radius: 40px; font-size: 1rem; font-weight: 800;">${gainsLivreur} F</span>
                 </div>`; 
             logCard.classList.add('hidden'); 
         }
@@ -548,8 +730,8 @@
         for(let u in staff) { 
             if(u === "Admin") continue; 
             let rL = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe'); 
-            let telInfo = staff[u].telephone ? `📞` : '⚠️';
-            if(l_rh) l_rh.innerHTML += `<div class="user-tag"><b>${u}</b><span style="color:#888; font-size:0.6rem;">${rL} ${telInfo}</span><div onclick="supprRH('${u}')" style="color:var(--accent);cursor:pointer;font-size:1.1rem">×</div></div>`; 
+            let telIcon = staff[u].telephone ? '📞' : '⚠️';
+            if(l_rh) l_rh.innerHTML += `<div class="user-tag"><span><strong>${u}</strong> <span style="color:#888; font-size:0.6rem;">${rL} ${telIcon}</span></span><div onclick="supprRH('${u}')" style="color:#e63946; cursor:pointer; font-weight:bold;">×</div></div>`; 
             if(staff[u].role && staff[u].role.startsWith('livreur')) { 
                 s_rh.innerHTML += `<option value="${u}">${u}</option>`; 
                 s_log.innerHTML += `<option value="${u}">${u}</option>`; 
@@ -561,12 +743,12 @@
             if (c.date === auj) {
                 tC++;
                 let sC = c.statut === 'Livré' ? 's-livre' : (c.statut === 'En cours' ? 's-cours' : (c.statut === 'Non Livré' ? 's-echec' : 's-attente'));
-                let act = (isAdminMode && c.statut !== 'Livré') ? `<div style="display: flex; gap: 10px; margin-left: 10px; font-size: 1rem;"><span onclick="modifierCourse('${c.id}')" style="cursor:pointer;">📝</span><span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;">🗑️</span></div>` : '';
-                live.innerHTML += `<div class="suivi-row course-selectable" data-id="${c.id}" onclick="selectCourse('${c.id}')"><div class="suivi-info"><span class="suivi-client">${c.client} <span style="color:var(--accent);">${c.heure||''}</span></span><span class="suivi-sub">${c.livreur} • ${c.tarif} F</span></div><div style="display: flex; align-items: center;">${c.modifiee?'🔄':''}<span class="statut-pill ${sC}">${c.statut}</span>${act}</div></div>`;
+                let act = (isAdminMode && c.statut !== 'Livré') ? `<div style="display: flex; gap: 8px;"><span onclick="modifierCourse('${c.id}')" style="cursor:pointer;">📝</span><span onclick="supprimerCourse('${c.id}')" style="cursor:pointer;">🗑️</span></div>` : '';
+                live.innerHTML += `<div class="suivi-row" data-id="${c.id}" onclick="selectCourse('${c.id}')"><div class="suivi-info"><span class="suivi-client">${c.client} <span style="color:#e63946;">${c.heure||''}</span></span><span class="suivi-sub">${c.livreur} • ${c.tarif} F</span></div><div style="display: flex; align-items: center; gap: 8px;">${c.modifiee?'🔄':''}<span class="statut-pill ${sC}">${c.statut}</span>${act}</div></div>`;
             }
             if(userSession !== "Deconnecte" && c.livreur === userSession && c.statut !== 'Livré' && c.statut !== 'Non Livré') {
-                let ct = `<div class="livreur-line"><span class="livreur-client-name">${c.client} <span style="color:var(--accent);">${c.tarif}F</span></span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
-                ct += (c.statut === 'Attente') ? `<button class="btn btn-orange" onclick="changerStatut('${c.id}', 'En cours')">ACCEPTER</button>` : `<div style="display:flex; gap:10px;"><button class="btn btn-green" style="flex:2" onclick="changerStatut('${c.id}', 'Livré')">LIVRÉ</button><button class="btn btn-red" style="flex:1" onclick="changerStatut('${c.id}', 'Non Livré')">ÉCHEC</button></div>`;
+                let ct = `<div class="livreur-line"><span class="livreur-client-name">${c.client} <span style="color:#e63946;">${c.tarif}F</span></span><span class="livreur-loc">📍 ${c.dest}</span></div>`;
+                ct += (c.statut === 'Attente') ? `<button class="btn btn-orange" onclick="changerStatut('${c.id}', 'En cours')">ACCEPTER LA COURSE</button>` : `<div style="display:flex; gap:10px;"><button class="btn btn-green" style="flex:2" onclick="changerStatut('${c.id}', 'Livré')">LIVRÉ</button><button class="btn btn-red" style="flex:1" onclick="changerStatut('${c.id}', 'Non Livré')">ÉCHEC</button></div>`;
                 l_liv.innerHTML += `<div class="card course-selectable" data-id="${c.id}" onclick="selectCourse('${c.id}')">${ct}<div style="font-size:0.6rem; color:#888; margin-top:8px;">👤 ${c.creePar || 'Admin'}</div></div>`;
             }
         });
@@ -576,7 +758,7 @@
             const logsCont = document.getElementById('logsContainer');
             if(logsCont) {
                 logsCont.classList.remove('hidden');
-                document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #eee;"><span style="color:var(--accent)">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
+                document.getElementById('listeLogs').innerHTML = logs.map(l => `<div style="padding:6px 0; border-bottom:1px solid #f1f5f9;"><span style="color:#e63946;">[${l.date.split(' ')[1]}]</span> <b>${l.auteur}</b> : ${l.details}</div>`).join('');
             }
         }
         renderCompta();
@@ -602,8 +784,8 @@
         document.getElementById('tableComptaContainer').innerHTML = Object.keys(bi).length ? h + `<tr class="total-row"><td>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr>` : "<p style='text-align:center;padding:20px'>Vide</p>";
         let dH = "";
         for(let n in de) {
-            dH += `<div style="margin-bottom:25px;"><div class="detail-header"><span class="detail-name">${n}</span><div><span class="count-number">${co[n]}</span></div></div>`;
-            de[n].forEach(c => { dH += `<div class="compta-detail-row"><span><b>${c.client}</b> (${c.dest})</span><b>${c.tarif} F</b></div>`; });
+            dH += `<div style="margin-bottom:25px;"><div class="detail-header" style="display:flex; justify-content:space-between;"><span class="detail-name">${n}</span><span class="count-number">${co[n]}</span></div>`;
+            de[n].forEach(c => { dH += `<div class="compta-detail-row" style="padding:8px 0; border-bottom:1px solid #f1f5f9;"><span><b>${c.client}</b> (${c.dest})</span><b>${c.tarif} F</b></div>`; });
             dH += `</div>`;
         }
         document.getElementById('detailsComptaContainer').innerHTML = dH || "<p style='text-align:center;padding:20px'>Vide</p>";
