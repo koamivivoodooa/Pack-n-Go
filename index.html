@@ -17,296 +17,50 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f5f7fb;
-            color: #1a1a2e;
-            line-height: 1.5;
-            padding-bottom: 80px;
-        }
-
-        /* Header */
-        .header {
-            background: #0a0a0a;
-            padding: 20px;
-            text-align: center;
-            border-bottom: 3px solid #e63946;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header img {
-            height: 70px;
-            object-fit: contain;
-        }
-
-        /* Container */
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px 16px;
-        }
-
-        /* Cartes */
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #f0f0f0;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #e63946;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 18px;
-            background: #e63946;
-            border-radius: 2px;
-        }
-
-        /* Formulaires */
-        input, select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1.5px solid #eef2f6;
-            border-radius: 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-            background: #fff;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #e63946;
-            box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
-        }
-
-        /* Boutons */
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 40px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 8px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fb; color: #1a1a2e; padding-bottom: 80px; }
+        .header { background: #0a0a0a; padding: 20px; text-align: center; border-bottom: 3px solid #e63946; position: sticky; top: 0; z-index: 100; }
+        .header img { height: 70px; object-fit: contain; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+        .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #e63946; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 18px; background: #e63946; border-radius: 2px; }
+        input, select { width: 100%; padding: 14px 16px; border: 1.5px solid #eef2f6; border-radius: 16px; font-family: 'Inter', sans-serif; font-size: 0.9rem; margin-bottom: 12px; background: #fff; }
+        input:focus, select:focus { outline: none; border-color: #e63946; box-shadow: 0 0 0 3px rgba(230,57,70,0.1); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 40px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
         .btn-primary { background: #0a0a0a; color: white; }
         .btn-primary:hover { background: #e63946; transform: translateY(-2px); }
         .btn-success { background: #1db954; color: white; }
         .btn-warning { background: #f39c12; color: white; }
         .btn-danger { background: #e63946; color: white; }
         .btn-outline { background: transparent; border: 1.5px solid #eef2f6; color: #1a1a2e; }
-
-        /* Badges */
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.65rem;
-            font-weight: 700;
-        }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.65rem; font-weight: 700; }
         .badge-attente { background: #f1f3f5; color: #6c757d; }
         .badge-cours { background: #fff3e0; color: #f39c12; }
         .badge-livre { background: #e8f5e9; color: #1db954; }
         .badge-echec { background: #ffebee; color: #e63946; }
-
-        /* Session */
-        .session-card {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-            color: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .gains-card {
-            background: linear-gradient(135deg, #1db954 0%, #0d8c3f 100%);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-        .gains-card span:last-child {
-            font-size: 1.6rem;
-            font-weight: 800;
-        }
-        .logout-btn {
-            background: rgba(255,255,255,0.15);
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-
-        /* Course item cliquable */
-        .course-item {
-            background: #f9f9f9;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-        .course-item.selected {
-            border-color: #e63946;
-            background: white;
-            box-shadow: 0 4px 12px rgba(230,57,70,0.15);
-        }
-        .course-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .course-client {
-            font-weight: 800;
-        }
-        .course-price {
-            color: #e63946;
-            font-weight: 800;
-        }
-
-        /* WhatsApp flottant */
-        .whatsapp-float {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: #25D366;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            cursor: pointer;
-            transition: all 0.2s;
-            z-index: 1000;
-            border: none;
-            font-size: 30px;
-            color: white;
-        }
-        .whatsapp-float.disabled {
-            background: #aaa;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .whatsapp-float:active {
-            transform: scale(0.95);
-        }
-        .whatsapp-tooltip {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            background: #0a0a0a;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            white-space: nowrap;
-            z-index: 999;
-            pointer-events: none;
-        }
-
-        /* Navigation admin */
-        .admin-nav {
-            display: flex;
-            background: white;
-            border-radius: 60px;
-            padding: 4px;
-            margin-bottom: 20px;
-            gap: 4px;
-        }
-        .admin-nav-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: transparent;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-        .admin-nav-btn.active {
-            background: #0a0a0a;
-            color: white;
-        }
-
-        .user-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .admin-trigger {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0a0a0a;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            z-index: 1000;
-        }
+        .session-card { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); color: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .gains-card { background: linear-gradient(135deg, #1db954 0%, #0d8c3f 100%); border-radius: 24px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .gains-card span:last-child { font-size: 1.6rem; font-weight: 800; }
+        .logout-btn { background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 40px; font-size: 0.7rem; cursor: pointer; }
+        .course-item { background: #f9f9f9; border-radius: 16px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .course-item.selected { border-color: #e63946; background: white; box-shadow: 0 4px 12px rgba(230,57,70,0.15); }
+        .course-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .course-client { font-weight: 800; }
+        .course-price { color: #e63946; font-weight: 800; }
+        .whatsapp-float { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.25); cursor: pointer; z-index: 1000; border: none; font-size: 30px; color: white; }
+        .whatsapp-float.disabled { background: #aaa; cursor: not-allowed; opacity: 0.6; }
+        .whatsapp-float:active { transform: scale(0.95); }
+        .whatsapp-tooltip { position: fixed; bottom: 90px; right: 20px; background: #0a0a0a; color: white; padding: 8px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; z-index: 999; pointer-events: none; }
+        .admin-nav { display: flex; background: white; border-radius: 60px; padding: 4px; margin-bottom: 20px; gap: 4px; }
+        .admin-nav-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 40px; font-weight: 600; font-size: 0.7rem; cursor: pointer; }
+        .admin-nav-btn.active { background: #0a0a0a; color: white; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .admin-trigger { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0a0a0a; color: white; padding: 12px 24px; border-radius: 40px; font-size: 0.7rem; font-weight: 700; cursor: pointer; z-index: 1000; }
         .hidden { display: none !important; }
-
-        .offline-banner {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #e63946;
-            color: white;
-            text-align: center;
-            padding: 12px;
-            font-size: 0.7rem;
-            z-index: 9999;
-        }
-
-        .fin-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.7rem;
-        }
-        .fin-table th, .fin-table td {
-            padding: 12px 4px;
-            text-align: center;
-            border-bottom: 1px solid #f0f0f0;
-        }
+        .offline-banner { position: fixed; top: 0; left: 0; right: 0; background: #e63946; color: white; text-align: center; padding: 12px; font-size: 0.7rem; z-index: 9999; }
+        .fin-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+        .fin-table th, .fin-table td { padding: 12px 4px; text-align: center; border-bottom: 1px solid #f0f0f0; }
         .total-row { background: #0a0a0a; color: white; }
     </style>
 </head>
@@ -379,7 +133,7 @@
             <div class="card">
                 <div class="section-title">Ajouter un membre</div>
                 <input type="text" id="rh_nom" placeholder="Nom complet">
-                <input type="tel" id="rh_telephone" placeholder="Numéro WhatsApp (ex: 22890123456)">
+                <input type="tel" id="rh_telephone" placeholder="Numéro WhatsApp (ex: 90123456)">
                 <input type="password" id="rh_code" placeholder="Code secret">
                 <select id="rh_role">
                     <option value="" disabled selected>-- Rôle --</option>
@@ -403,7 +157,6 @@
     <div id="adminTrigger" class="admin-trigger no-print" onclick="authAdmin()">🔐 ACCÈS ADMIN</div>
 </div>
 
-<!-- WhatsApp Flottant -->
 <button id="whatsappBtn" class="whatsapp-float disabled">💬</button>
 <div id="whatsappTooltip" class="whatsapp-tooltip hidden">Sélectionnez une course</div>
 
@@ -438,7 +191,6 @@
 
     document.getElementById('dateRef').valueAsDate = new Date();
 
-    // Détection hors connexion
     function updateNetworkStatus() {
         if (!navigator.onLine) {
             let banner = document.getElementById('offline-banner');
@@ -498,7 +250,6 @@
         refreshAll(); 
     });
 
-    // WhatsApp logic
     function updateWhatsAppButton() {
         const btn = document.getElementById('whatsappBtn');
         const tooltip = document.getElementById('whatsappTooltip');
@@ -506,7 +257,7 @@
         if (!selectedCourseId) {
             btn.classList.add('disabled');
             tooltip.classList.remove('hidden');
-            tooltip.innerText = 'Sélectionnez une course';
+            tooltip.innerText = 'Cliquez sur une course';
             btn.onclick = null;
             return;
         }
@@ -514,7 +265,6 @@
         const course = courses.find(c => c.id === selectedCourseId);
         if (!course) {
             btn.classList.add('disabled');
-            tooltip.classList.remove('hidden');
             tooltip.innerText = 'Course introuvable';
             btn.onclick = null;
             return;
@@ -523,7 +273,6 @@
         let phoneNumber = null;
         let contactName = "";
         
-        // Si livreur connecté -> appeler l'admin qui a créé la course
         if (userSession !== "Deconnecte" && !isAdminMode) {
             const adminName = course.creePar;
             if (adminName && staff[adminName] && staff[adminName].telephone) {
@@ -531,7 +280,6 @@
                 contactName = adminName;
             }
         }
-        // Si admin connecté -> appeler le livreur de la course
         else if (isAdminMode) {
             const livreurName = course.livreur;
             if (livreurName && staff[livreurName] && staff[livreurName].telephone) {
@@ -550,11 +298,11 @@
                 window.open(`https://wa.me/${cleanNumber}`, '_blank');
             };
             tooltip.classList.remove('hidden');
-            tooltip.innerText = `📞 Appeler ${contactName} sur WhatsApp`;
+            tooltip.innerText = `📞 Appeler ${contactName}`;
         } else {
             btn.classList.add('disabled');
             tooltip.classList.remove('hidden');
-            tooltip.innerText = `⚠️ Pas de numéro pour ${isAdminMode ? course.livreur : course.creePar}`;
+            tooltip.innerText = `📱 Pas de numéro`;
             btn.onclick = null;
         }
     }
@@ -562,7 +310,6 @@
     function selectCourse(courseId) {
         selectedCourseId = courseId;
         updateWhatsAppButton();
-        // Mettre à jour l'affichage visuel
         document.querySelectorAll('.course-item').forEach(el => {
             if (el.dataset.id === courseId) {
                 el.classList.add('selected');
@@ -638,52 +385,63 @@
         const tel = document.getElementById('rh_telephone').value.trim();
         const c = document.getElementById('rh_code').value; 
         const r = document.getElementById('rh_role').value; 
-        if(n && c && r && tel) { 
-            db.ref('staff/' + n).set({ mdp: c, role: r, telephone: tel }); 
-            tracerAction(`Ajout : ${n}`); 
-            document.getElementById('rh_nom').value = ''; 
-            document.getElementById('rh_telephone').value = '';
-            document.getElementById('rh_code').value = ''; 
-        } else {
-            alert("Remplissez tous les champs (téléphone requis)");
-        }
+        
+        if(!n) { alert("Nom requis"); return; }
+        if(!tel) { alert("Numéro WhatsApp requis"); return; }
+        if(!c) { alert("Code secret requis"); return; }
+        if(!r) { alert("Rôle requis"); return; }
+        
+        db.ref('staff/' + n).set({ mdp: c, role: r, telephone: tel }); 
+        tracerAction(`Ajout : ${n}`); 
+        document.getElementById('rh_nom').value = ''; 
+        document.getElementById('rh_telephone').value = '';
+        document.getElementById('rh_code').value = ''; 
+        alert(`✅ ${n} ajouté avec succès`);
     }
     
     function supprRH(n) {
-        const coursesActives = courses.filter(c => c.livreur === n && c.statut !== 'Livré' && c.statut !== 'Non Livré');
-        if(coursesActives.length > 0) {
-            alert(`❌ Impossible : ${n} a ${coursesActives.length} course(s) en cours`);
-            return;
+        // Vérifier si la personne a des courses actives (seulement si c'est un livreur)
+        const estLivreur = staff[n] && staff[n].role && staff[n].role.startsWith('livreur');
+        if (estLivreur) {
+            const coursesActives = courses.filter(c => c.livreur === n && c.statut !== 'Livré' && c.statut !== 'Non Livré');
+            if(coursesActives.length > 0) {
+                alert(`❌ Impossible : ${n} a ${coursesActives.length} course(s) en cours`);
+                return;
+            }
         }
-        if(confirm(`Supprimer ${n} ?`)) { 
+        
+        if(confirm(`Supprimer ${n} définitivement ?`)) { 
             db.ref('staff/' + n).remove(); 
             tracerAction(`Suppression : ${n}`); 
+            alert(`✅ ${n} supprimé`);
         }
     }
     
     function creerCourse() { 
-        const c = document.getElementById('c_client').value; 
+        const c = document.getElementById('c_client').value.trim(); 
         const t = document.getElementById('c_tarif').value; 
-        const d = document.getElementById('c_dest').value; 
+        const d = document.getElementById('c_dest').value.trim(); 
         const l = document.getElementById('c_livreur').value; 
         const h = document.getElementById('c_heure').value; 
-        if(c && t && l) { 
-            db.ref('courses').push({ 
-                date: new Date().toISOString().split('T')[0], 
-                client: c, 
-                dest: d, 
-                tarif: parseInt(t), 
-                livreur: l, 
-                heure: h, 
-                statut: 'Attente', 
-                modifiee: false,
-                creePar: activeAdminName || "Admin"
-            }); 
-            tracerAction(`Création : ${c}`); 
-            annulerModif(); 
-        } else {
-            alert("Client, tarif et livreur requis");
-        }
+        
+        if(!c) { alert("Nom du client requis"); return; }
+        if(!t) { alert("Tarif requis"); return; }
+        if(!l) { alert("Sélectionnez un livreur"); return; }
+        
+        db.ref('courses').push({ 
+            date: new Date().toISOString().split('T')[0], 
+            client: c, 
+            dest: d || "Non spécifié", 
+            tarif: parseInt(t), 
+            livreur: l, 
+            heure: h || "", 
+            statut: 'Attente', 
+            modifiee: false,
+            creePar: activeAdminName || "Admin"
+        }); 
+        tracerAction(`Création : ${c}`); 
+        annulerModif(); 
+        alert(`✅ Course créée pour ${l}`);
     }
     
     function modifierCourse(id) { 
@@ -722,9 +480,10 @@
     }
     
     function supprimerCourse(id) { 
-        if(confirm("Supprimer ?")) {
+        if(confirm("Supprimer cette course ?")) {
             db.ref('courses/' + id).remove();
             if(selectedCourseId === id) selectedCourseId = null;
+            tracerAction("Suppression course");
         }
     }
     
@@ -783,7 +542,8 @@
         for(let u in staff) { 
             if(u === "Admin") continue; 
             let rL = staff[u].role === 'admin' ? 'Admin' : (staff[u].role === 'livreur_packngo' ? 'Interne' : 'Externe'); 
-            if(l_rh) l_rh.innerHTML += `<div class="user-row"><span><strong>${u}</strong><br><span style="font-size:0.65rem;">${rL}</span></span><div onclick="supprRH('${u}')" style="color:#e63946; cursor:pointer;">×</div></div>`; 
+            let telInfo = staff[u].telephone ? `📞 ${staff[u].telephone}` : '⚠️ Pas de numéro';
+            if(l_rh) l_rh.innerHTML += `<div class="user-row"><span><strong>${u}</strong><br><span style="font-size:0.65rem;">${rL} | ${telInfo}</span></span><div onclick="supprRH('${u}')" style="color:#e63946; cursor:pointer; font-size:1.2rem;">×</div></div>`; 
             if(staff[u].role && staff[u].role.startsWith('livreur')) { 
                 if(s_rh) s_rh.innerHTML += `<option value="${u}">${u}</option>`; 
                 if(s_log) s_log.innerHTML += `<option value="${u}">${u}</option>`; 
@@ -829,7 +589,7 @@
                         </div>
                         <div style="font-size:0.75rem; color:#666; margin:6px 0;">📍 ${c.dest}</div>
                         ${actionsHtml}
-                        <div style="font-size:0.65rem; color:#888; margin-top:8px;">📞 Admin: ${c.creePar || '?'}</div>
+                        <div style="font-size:0.65rem; color:#888; margin-top:8px;">👤 ${c.creePar || '?'}</div>
                     </div>`;
             }
         });
@@ -868,7 +628,7 @@
             let pL = bi[n] - pP; tT+=bi[n]; tG+=pL; tP+=pP;
             h += `<tr><td>${n}</td><td>${bi[n]}</td><td>${pL}</td><td>${pP}</td></tr>`;
         }
-        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bi).length ? h + `<tr class="total-row"><td>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr></table>` : "<p style='text-align:center;padding:20px;'>Aucune donnée</p>";
+        document.getElementById('tableComptaContainer').innerHTML = Object.keys(bi).length ? h + `<tr class="total-row"><tr>TOTAL</td><td>${tT}</td><td>${tG}</td><td>${tP}</td></tr></table>` : "<p style='text-align:center;padding:20px;'>Aucune donnée</p>";
         
         let dH = "";
         for(let n in de) {
