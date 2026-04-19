@@ -234,6 +234,27 @@
 
     let courses = [], staff = {}, logs = [], userSession = "Deconnecte", activeAdminName = "", isAdminMode = false, isAdminPrincipal = false;
 
+    // ========== DÉTECTION CONNEXION INTERNET ==========
+    function updateNetworkStatus() {
+        if (!navigator.onLine) {
+            let banner = document.getElementById('offline-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'offline-banner';
+                banner.style.cssText = 'position:fixed; top:0; left:0; right:0; background:#e63946; color:white; text-align:center; padding:12px; font-size:0.75rem; font-weight:bold; z-index:9999;';
+                banner.innerHTML = '⚠️ PAS DE CONNEXION INTERNET ⚠️<br><span style="font-size:0.6rem;">Les données affichées peuvent être obsolètes</span>';
+                document.body.prepend(banner);
+            }
+        } else {
+            let banner = document.getElementById('offline-banner');
+            if (banner) banner.remove();
+        }
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    updateNetworkStatus();
+
     if(savedAdmin) {
         const d = JSON.parse(savedAdmin); isAdminMode = true; isAdminPrincipal = d.isPrincipal; activeAdminName = d.name;
     } else if(savedLivreur) { userSession = savedLivreur; }
@@ -314,7 +335,20 @@
     }
 
     function ajouterRH() { const n = document.getElementById('rh_nom').value.trim(), c = document.getElementById('rh_code').value, r = document.getElementById('rh_role').value; if(n && c && r) { db.ref('staff/' + n).set({ mdp: c, role: r }); tracerAction(`Ajout personnel : ${n}`); document.getElementById('rh_nom').value = ''; document.getElementById('rh_code').value = ''; } }
-    function supprRH(n) { if(confirm(`Supprimer ${n} ?`)) { db.ref('staff/' + n).remove(); tracerAction(`Suppression personnel : ${n}`); } }
+    
+    function supprRH(n) {
+        const coursesActives = courses.filter(c => c.livreur === n && c.statut !== 'Livré' && c.statut !== 'Non Livré');
+        if(coursesActives.length > 0) {
+            alert(`❌ Impossible de supprimer ${n} : il/elle a ${coursesActives.length} course(s) en cours.`);
+            return;
+        }
+        if(confirm(`Supprimer ${n} définitivement ?`)) { 
+            db.ref('staff/' + n).remove(); 
+            tracerAction(`Suppression personnel : ${n}`); 
+            alert(`✅ ${n} a été supprimé.`);
+        }
+    }
+    
     function creerCourse() { const c = document.getElementById('c_client').value, t = document.getElementById('c_tarif').value, d = document.getElementById('c_dest').value, l = document.getElementById('c_livreur').value, h = document.getElementById('c_heure').value; if(c && t) { db.ref('courses').push({ date: new Date().toISOString().split('T')[0], client: c, dest: d, tarif: parseInt(t), livreur: l, heure: h, statut: 'Attente', modifiee: false }); tracerAction(`Création course : ${c}`); annulerModif(); } }
     function modifierCourse(id) { let c = courses.find(i => i.id === id); if(!c) return; document.getElementById('c_client').value = c.client; document.getElementById('c_dest').value = c.dest; document.getElementById('c_tarif').value = c.tarif; document.getElementById('c_livreur').value = c.livreur; document.getElementById('c_heure').value = c.heure || ""; document.getElementById('formActionContainer').innerHTML = `<button class="btn btn-orange" onclick="sauvegarderModif('${id}')">METTRE À JOUR</button><button class="btn btn-black" style="background:#888" onclick="annulerModif()">ANNULER</button>`; window.scrollTo({ top: 0, behavior: 'smooth' }); }
     function sauvegarderModif(id) { const cn = document.getElementById('c_client').value; db.ref('courses/' + id).update({ client: cn, dest: document.getElementById('c_dest').value, tarif: parseInt(document.getElementById('c_tarif').value), livreur: document.getElementById('c_livreur').value, heure: document.getElementById('c_heure').value, modifiee: true }); tracerAction(`Modif/Reprog course : ${cn}`); annulerModif(); }
