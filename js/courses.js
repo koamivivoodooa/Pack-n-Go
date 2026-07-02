@@ -38,6 +38,9 @@ export function listenCourses(onUpdate) {
     state.courses = [];
     snap.forEach(child => state.courses.unshift({ id: child.key, ...child.val() }));
     if (onUpdate) onUpdate();
+  }, error => {
+    console.error('Erreur de lecture des courses :', error);
+    toast("Impossible de charger les courses : " + error.message, "error");
   });
 }
 
@@ -48,10 +51,9 @@ export function refreshDashboard() {
   const today = now.toISOString().split('T')[0];
 
   if (isLivreur()) {
-    // ✅ CORRECTION ICI : comparaison avec state.currentUser.username
-    const myCourses = state.courses.filter(c => c.livreur === state.currentUser.username && c.date === today);
+    const myCourses = state.courses.filter(c => c.livreur === state.currentUser.name && c.date === today);
     const totalLivrees = myCourses.filter(c => c.statut === 'Livré').reduce((s, c) => s + (c.tarif || 0), 0);
-    const role = state.staff[state.currentUser.username]?.role || 'livreur_externe';
+    const role = state.staff[state.currentUser.name]?.role || 'livreur_externe';
     const partPack = role === 'livreur_packngo' ? Math.round(totalLivrees * 0.7) : Math.round(totalLivrees * 0.3);
     const gainLivreur = totalLivrees - partPack;
     const nbCoursesJour = myCourses.length;
@@ -140,8 +142,7 @@ export function refreshDashboard() {
 // ---------- Courses ----------
 export function refreshCourses() {
   if (!state.currentUser) return;
-  // ✅ CORRECTION ICI : comparaison avec state.currentUser.username
-  let coursesToShow = isLivreur() ? state.courses.filter(c => c.livreur === state.currentUser.username) : state.courses;
+  let coursesToShow = isLivreur() ? state.courses.filter(c => c.livreur === state.currentUser.name) : state.courses;
   let html = '<div class="course-list">';
   coursesToShow.forEach(c => {
     html += courseItemHtml(c, { showEditDelete: isAdmin(), allowQuickStatus: isLivreur() });
