@@ -44,14 +44,16 @@ export function attemptLogin(onSuccess) {
   let success = false;
   if (username.toLowerCase() === 'admin') {
     if (password === ADMIN_CODE) {
-      state.currentUser = { name: 'Admin Principal', role: 'admin', isAdminPrincipal: true };
+      // ✅ CORRECTION ICI : Ajout de la propriété `username`
+      state.currentUser = { name: 'Admin Principal', username: username, role: 'admin', isAdminPrincipal: true };
       success = true;
     } else { toast("Code admin incorrect", "error"); return; }
   } else {
     const user = state.staff[username];
     if (!user) { toast("Utilisateur inconnu", "error"); return; }
     if (user.mdp === sha256(password)) {
-      state.currentUser = { name: user.nom || username, role: user.role, isAdminPrincipal: false };
+      // ✅ CORRECTION ICI : Ajout de la propriété `username`
+      state.currentUser = { name: user.nom || username, username: username, role: user.role, isAdminPrincipal: false };
       success = true;
     } else { toast("Code secret incorrect", "error"); return; }
   }
