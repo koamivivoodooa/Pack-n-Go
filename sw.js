@@ -1,4 +1,4 @@
-const CACHE_NAME = 'packngo-v3';
+const CACHE_NAME = 'packngo-v4';
 const urlsToCache = [
   '.',
   'index.html',
