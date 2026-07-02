@@ -22,6 +22,9 @@ export function listenStaff(onUpdate) {
   db.ref('staff').on('value', snap => {
     state.staff = snap.val() || {};
     if (onUpdate) onUpdate();
+  }, error => {
+    console.error('Erreur de lecture du staff :', error);
+    toast("Impossible de charger l'équipe : " + error.message, "error");
   });
 }
 
