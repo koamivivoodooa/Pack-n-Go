@@ -21,7 +21,8 @@ export const db = firebase.database();
 // accès 100% public. Bloque les scripts/bots qui tapent l'API REST
 // directement sans passer par le SDK Firebase.
 export const authReady = firebase.auth().signInAnonymously()
-  .catch(err => console.error('Échec de l\'authentification anonyme :', err));
+  .then(() => console.log('[Pack\'n Go] Auth anonyme OK, uid =', firebase.auth().currentUser?.uid))
+  .catch(err => console.error('[Pack\'n Go] Échec auth anonyme :', err));
 
 export const ADMIN_CODE = "0612";
 
