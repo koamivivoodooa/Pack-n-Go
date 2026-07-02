@@ -16,6 +16,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 export const db = firebase.database();
 
+// Auth anonyme : ne remplace pas une vraie authentification par rôle,
+// mais permet aux règles Firebase d'exiger "auth != null" au lieu d'un
+// accès 100% public. Bloque les scripts/bots qui tapent l'API REST
+// directement sans passer par le SDK Firebase.
+export const authReady = firebase.auth().signInAnonymously()
+  .catch(err => console.error('Échec de l\'authentification anonyme :', err));
+
 export const ADMIN_CODE = "0612";
 
 // État partagé, muté par les différents modules via `state.xxx = ...`.
