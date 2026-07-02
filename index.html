@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Pack'n Go | Dashboard Pro</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <div id="loginScreen">
+    <div class="login-box">
+      <img src="logo.png" alt="Pack'n Go Logo" style="max-width:150px; height:auto; margin-bottom:16px;">
+      <h2>Pack'n Go</h2>
+      <p style="color:var(--text-secondary); margin-bottom:20px;">Connectez-vous pour continuer</p>
+      <input type="text" id="loginUser" placeholder="Nom d'utilisateur">
+      <input type="password" id="loginPassword" placeholder="Code secret">
+      <button class="btn btn-accent btn-block" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Connexion</button>
+    </div>
+  </div>
+
+  <div id="appContainer">
+    <header class="livreur-topbar" id="livreurTopBar">
+      <img src="logo.png" alt="Pack'n Go">
+      <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">P<span style="font-size:0.7rem;">&G</span></div>
+        <h2>Pack<span>'n Go</span></h2>
+        <!-- Le bouton thème a été déplacé dans le footer -->
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav">
+        <div class="sidebar-section-label">Menu</div>
+        <a data-page="dashboard" class="active"><i class="fas fa-chart-pie"></i> Tableau de bord</a>
+        <a data-page="courses"><i class="fas fa-box"></i> Courses</a>
+        <a data-page="comptabilite"><i class="fas fa-coins"></i> Comptabilité</a>
+        <a data-page="ressources"><i class="fas fa-users"></i> Ressources</a>
+        <a data-page="messagerie"><i class="fas fa-comments"></i> Messagerie <span class="badge-notif" id="msgBadgeSidebar" style="display:none;">0</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-badge">
+          <div class="avatar-wrap">
+            <div class="avatar" id="sidebarAvatar">?</div>
+            <span class="status-dot"></span>
+          </div>
+          <div>
+            <div class="name" id="sidebarName"></div>
+            <div class="role" id="sidebarRole" style="font-size:0.7rem; color:var(--text-secondary);"></div>
+          </div>
+        </div>
+        <!-- Bouton thème -->
+        <button class="theme-toggle-icon" id="themeToggleIcon">
+          <i class="fas fa-moon"></i> <span id="themeLabel">Thème sombre</span>
+        </button>
+        <button class="btn btn-outline btn-sm btn-block" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+      </div>
+    </aside>
+
+    <nav class="bottom-nav" id="bottomNav">
+      <a data-page="dashboard" class="active"><i class="fas fa-home"></i> Accueil</a>
+      <a data-page="courses"><i class="fas fa-box"></i> Mes courses</a>
+      <a data-page="messagerie"><i class="fas fa-comments"></i> Messages <span class="badge-notif" id="msgBadgeBottom" style="display:none;">0</span></a>
+    </nav>
+
+    <button class="fab-btn hidden" id="fabCourseBtn" title="Nouvelle course"><i class="fas fa-plus"></i></button>
+
+    <main class="main" id="mainContent">
+      <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+      <div class="content-wrapper">
+        <div class="page active" id="page-dashboard">
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div id="livreurCoursesList"></div>
+          <div class="grid-2" id="chartsGrid">
+            <div class="card">
+              <div class="card-header"><h3><i class="fas fa-chart-line"></i> Évolution des gains (7j)</h3></div>
+              <div class="chart-container"><canvas id="chartGains"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Courses par statut</h3></div>
+              <div class="chart-container"><canvas id="chartStatuts"></canvas></div>
+            </div>
+          </div>
+          <div class="card" id="dernieresCoursesCard">
+            <div class="card-header"><h3><i class="fas fa-clock"></i> Dernières courses</h3></div>
+            <div id="dernieresCourses"></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-courses">
+          <div class="card" id="newCourseCard">
+            <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Nouvelle course</h3></div>
+            <div class="form-stack">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="c_client">Client</label>
+                  <input type="text" id="c_client" placeholder="Nom du client">
+                </div>
+                <div class="form-field">
+                  <label for="c_dest">Destination</label>
+                  <input type="text" id="c_dest" placeholder="Adresse de livraison">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="c_tel">Téléphone</label>
+                  <input type="tel" id="c_tel" placeholder="Numéro du client">
+                </div>
+                <div class="form-field">
+                  <label for="c_tarif">Tarif (FCFA)</label>
+                  <input type="number" id="c_tarif" placeholder="0">
+                </div>
+              </div>
+              <div class="form-field">
+                <label>Livreur</label>
+                <div class="custom-select" id="c_livreur_select">
+                  <div class="custom-select-trigger" onclick="toggleCustomSelect('c_livreur_select')">
+                    <span>Choisir livreur</span>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                  <div class="custom-select-options" id="c_livreur_options"></div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-accent" onclick="creerCourse()"><i class="fas fa-calendar-plus"></i> Programmer</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-list-ul"></i> Suivi des courses</h3></div>
+            <div id="suiviCourses"></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-comptabilite">
+          <div class="kpi-grid" id="bilanKpi"></div>
+          <div class="periode-toolbar" id="periodeControls">
+            <div class="periode-toolbar-label"><i class="fas fa-filter"></i> Période</div>
+            <div class="periode-btn-group">
+              <button class="periode-btn active" data-periode="jour">Jour</button>
+              <button class="periode-btn" data-periode="semaine">Semaine</button>
+              <button class="periode-btn" data-periode="mois">Mois</button>
+            </div>
+            <input type="date" class="periode-date" id="periodeDate">
+          </div>
+          <div id="bilanFinancier"></div>
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-table"></i> Détail des transactions</h3></div>
+            <div id="tableCompta"></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-ressources">
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-user-plus"></i> Ajouter un membre</h3></div>
+            <div class="form-stack">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="rh_nom_complet">Nom complet</label>
+                  <input type="text" id="rh_nom_complet" placeholder="Ex: Komi Agbeko">
+                </div>
+                <div class="form-field">
+                  <label for="rh_username">Nom d'utilisateur</label>
+                  <input type="text" id="rh_username" placeholder="Ex: komi">
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="rh_code">Code secret</label>
+                <input type="password" id="rh_code" placeholder="••••">
+              </div>
+              <div class="form-field">
+                <label>Rôle</label>
+                <div class="role-picker" id="rh_role_picker">
+                  <button type="button" class="role-option selected" data-role="livreur_packngo">
+                    <span class="role-option-label">🚀 Interne</span>
+                    <span class="role-option-desc">70% Pack'n Go</span>
+                  </button>
+                  <button type="button" class="role-option" data-role="livreur_externe">
+                    <span class="role-option-label">🏍️ Externe</span>
+                    <span class="role-option-desc">30% Pack'n Go</span>
+                  </button>
+                  <button type="button" class="role-option" data-role="gestionnaire">
+                    <span class="role-option-label">📋 Gestionnaire</span>
+                    <span class="role-option-desc">Supervision</span>
+                  </button>
+                  <button type="button" class="role-option" data-role="admin">
+                    <span class="role-option-label">🔑 Admin</span>
+                    <span class="role-option-desc">Accès complet</span>
+                  </button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" onclick="ajouterRH()"><i class="fas fa-save"></i> Enregistrer</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-address-book"></i> Équipe</h3></div>
+            <div id="listeRH"></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-messagerie">
+          <div class="card">
+            <div class="card-header"><h3><i class="fas fa-comments"></i> Conversations</h3></div>
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchConv" placeholder="Rechercher une conversation..." oninput="filterConversations()">
+            </div>
+            <div id="listeConversations" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h3 id="modalTitle"><i class="fas fa-question-circle"></i> Confirmation</h3>
+      <p id="modalMessage"></p>
+      <input type="password" id="modalInput" placeholder="Code" style="display:none;">
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button class="btn btn-primary" id="modalConfirmBtn">Confirmer</button>
+        <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
