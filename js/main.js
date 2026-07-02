@@ -1,7 +1,7 @@
 // ============================================================
 // main.js — Point d'entrée : orchestration et câblage des events
 // ============================================================
-import { state } from './core.js';
+import { state, authReady } from './core.js';
 import { initSession, attemptLogin, logout } from './auth.js';
 import {
   toast, toggleTheme, applyRoleLayout, navigateTo,
@@ -53,8 +53,13 @@ Object.assign(window, {
 });
 
 // ---------- Données temps réel ----------
-listenCourses(() => { refreshAllUI(); listenForUnreadMessages(); });
-listenStaff(refreshAllUI);
+// On attend l'auth anonyme (core.js) avant d'ouvrir les listeners,
+// pour rester compatible avec des règles Firebase du type "auth != null".
+authReady.then(() => {
+  listenCourses(() => { refreshAllUI(); listenForUnreadMessages(); });
+  listenStaff(refreshAllUI);
+  listenAllMessages();
+});
 
 // ---------- Init ----------
 function init() {
@@ -127,8 +132,6 @@ function init() {
     state.dateReference = periodeDateInput.value;
     refreshComptabilite();
   });
-
-  listenAllMessages();
 
   if (state.currentUser) {
     document.body.classList.add('logged-in');
