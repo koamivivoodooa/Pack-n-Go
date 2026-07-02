@@ -55,8 +55,14 @@ Object.assign(window, {
 // ---------- Données temps réel ----------
 // On attend l'auth anonyme (core.js) avant d'ouvrir les listeners,
 // pour rester compatible avec des règles Firebase du type "auth != null".
+console.log('[Pack\'n Go] main.js chargé, attente de authReady...');
 authReady.then(() => {
-  listenCourses(() => { refreshAllUI(); listenForUnreadMessages(); });
+  console.log('[Pack\'n Go] authReady résolu, ouverture des listeners');
+  listenCourses(() => {
+    console.log('[Pack\'n Go] listenCourses callback, nb courses =', state.courses.length);
+    refreshAllUI();
+    listenForUnreadMessages();
+  });
   listenStaff(refreshAllUI);
   listenAllMessages();
 });
