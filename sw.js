@@ -1,49 +1,41 @@
-const CACHE_NAME = 'png-v5-cache';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './logo.png',
-  './icon.png',
-  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap'
+const CACHE_NAME = 'packngo-v3';
+const urlsToCache = [
+  '.',
+  'index.html',
+  'styles.css',
+  'js/core.js',
+  'js/auth.js',
+  'js/ui.js',
+  'js/courses.js',
+  'js/staff-messagerie.js',
+  'js/main.js',
+  'icon.png',
+  'icon-512.png',
+  'manifest.json'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
+// Supprime les anciens caches (ex: packngo-v1) quand une nouvelle
+// version du service worker prend le relais.
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      )
+    )
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('firebaseio.com')) {
-    return;
-  }
-  
-  e.respondWith(
-    fetch(e.request)
-      .then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(e.request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        return caches.match(e.request).then((cachedResponse) => {
-          return cachedResponse || caches.match('./index.html');
-        });
-      })
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
