@@ -35,8 +35,13 @@ function courseItemHtml(c, { showEditDelete = false, allowQuickStatus = false } 
 // module dépende de ui.js pour ça.
 export function listenCourses(onUpdate) {
   db.ref('courses').on('value', snap => {
+    console.log('🔍 Nombre d’enfants dans le snapshot :', snap.numChildren());
+    console.log('🔍 Contenu brut du snapshot :', snap.val());
     state.courses = [];
-    snap.forEach(child => state.courses.unshift({ id: child.key, ...child.val() }));
+    snap.forEach(child => {
+      state.courses.unshift({ id: child.key, ...child.val() });
+    });
+    console.log('🔍 state.courses après traitement :', state.courses);
     if (onUpdate) onUpdate();
   }, error => {
     console.error('Erreur de lecture des courses :', error);
@@ -74,6 +79,9 @@ export function refreshDashboard() {
     }
     document.getElementById('livreurCoursesList').innerHTML = coursesHtml;
   } else if (isAdmin()) {
+    // ✅ Déclaration de today en premier (correction)
+    const today = new Date().toISOString().split('T')[0];
+
     const dayOfWeek = now.getDay();
     const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const monday = new Date(now); monday.setDate(now.getDate() - diffToMonday);
@@ -128,27 +136,41 @@ export function refreshDashboard() {
       });
     }
 
-    const dernieres = state.courses.slice(0, 8);
+    // On réutilise la variable today déjà déclarée
+    const dernieres = state.courses.filter(c => c.date === today).slice(0, 10);
+
     let html = '<div class="table-responsive"><table><thead><tr><th>Client</th><th>Livreur</th><th>Tarif</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
     dernieres.forEach(c => {
       const badge = c.statut === 'Livré' ? 'badge-livre' : (c.statut === 'En cours' ? 'badge-cours' : (c.statut === 'Annulé' ? 'badge-annule' : 'badge-attente'));
       html += `<tr><td>${c.client}</td><td>${c.livreur || '—'}</td><td>${c.tarif || 0} F</td><td><span class="badge ${badge}">${c.statut}</span></td><td>${c.date}</td></tr>`;
     });
     html += '</tbody></table></div>';
-    document.getElementById('dernieresCourses').innerHTML = html || '<p style="color:var(--text-secondary);">Aucune course.</p>';
+    document.getElementById('dernieresCourses').innerHTML = html || '<p style="color:var(--text-secondary);">Aucune course pour aujourd’hui.</p>';
   }
 }
 
 // ---------- Courses ----------
 export function refreshCourses() {
   if (!state.currentUser) return;
-  let coursesToShow = isLivreur() ? state.courses.filter(c => c.livreur === state.currentUser.name) : state.courses;
+
+  // Date du jour au format YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
+
+  // Filtrer d'abord par date du jour
+  let coursesToShow = state.courses.filter(c => c.date === today);
+
+  // Si c'est un livreur, on filtre en plus par son nom
+  if (isLivreur()) {
+    coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.name);
+  }
+
+  // Génération de l'affichage (le reste du code ne change pas)
   let html = '<div class="course-list">';
   coursesToShow.forEach(c => {
     html += courseItemHtml(c, { showEditDelete: isAdmin(), allowQuickStatus: isLivreur() });
   });
   html += '</div>';
-  document.getElementById('suiviCourses').innerHTML = coursesToShow.length ? html : '<p style="color:var(--text-secondary);">Aucune course.</p>';
+  document.getElementById('suiviCourses').innerHTML = coursesToShow.length ? html : '<p style="color:var(--text-secondary);">Aucune course pour aujourd’hui.</p>';
 }
 
 export function creerCourse() {
