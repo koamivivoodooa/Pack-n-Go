@@ -2,7 +2,7 @@
 // staff-messagerie.js — Ressources humaines + messagerie
 // ============================================================
 import { db, state } from './core.js';
-import { isAdminPrincipal, sha256 } from './auth.js';
+import { isAdmin, isLivreur, isAdminPrincipal } from './auth.js';
 import { toast, openModal, populateSelect } from './ui.js';
 
 // ---------- Suivi de lecture des conversations ----------
@@ -139,6 +139,12 @@ export function ouvrirChat(courseId) {
   const course = state.courses.find(c => c.id === courseId);
   if (!course) return;
 
+  // 🔒 Vérification : un livreur ne peut ouvrir que ses propres conversations
+  if (isLivreur() && course.livreur !== state.currentUser.name) {
+    toast("Vous n'avez pas accès à cette conversation", "error");
+    return;
+  }
+
   const overlay = document.createElement('div');
   overlay.className = 'chat-overlay';
   overlay.innerHTML = `
@@ -242,7 +248,14 @@ export function ouvrirChat(courseId) {
 
 export function refreshConversations() {
   const searchQuery = (document.getElementById('searchConv')?.value || '').toLowerCase();
-  const courseIds = [...new Set(state.courses.map(c => c.id))];
+
+  // 🔒 Filtrer les courses selon le rôle
+  let coursesToShow = state.courses;
+  if (isLivreur()) {
+    coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.name);
+  }
+
+  const courseIds = [...new Set(coursesToShow.map(c => c.id))];
   const div = document.getElementById('listeConversations');
   if (courseIds.length === 0) {
     div.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><span>Aucune conversation pour le moment.</span></div>';
@@ -252,7 +265,7 @@ export function refreshConversations() {
   let html = '<div class="conv-list">';
   let matchCount = 0;
   courseIds.forEach(id => {
-    const course = state.courses.find(c => c.id === id);
+    const course = coursesToShow.find(c => c.id === id);
     if (!course) return;
     const clientName = course.client || 'Client inconnu';
     const dest = course.dest || '';
@@ -305,7 +318,12 @@ export function updateBadges() {
 
 export function listenForUnreadMessages() {
   let count = 0;
-  state.courses.forEach(c => {
+  // 🔒 Filtrer les courses pour les livreurs
+  let coursesToCheck = state.courses;
+  if (isLivreur()) {
+    coursesToCheck = coursesToCheck.filter(c => c.livreur === state.currentUser.name);
+  }
+  coursesToCheck.forEach(c => {
     const lastMsg = state.lastMessages[c.id];
     if (lastMsg && lastMsg.sender !== state.currentUser?.name && lastMsg.timestamp > getLastRead(c.id)) count++;
   });
