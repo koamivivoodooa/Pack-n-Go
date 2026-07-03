@@ -23,17 +23,11 @@
   --topbar-height: 56px;
   --content-max-width: 1200px;
 
-  /* Palette KPI — dérivée de l'identité de marque plutôt que des
-     couleurs sémantiques par défaut (bleu/vert/orange/rouge Tailwind).
-     "Transit" (sarcelle) évoque le suivi/la géoloc, "Ember" est
-     l'accent de marque, "Kraft" rappelle une étiquette de colis,
-     "Rose" reste dans la même famille chromatique qu'Ember. */
   --kpi-transit-bg: #ccfbf1; --kpi-transit-fg: #0d9488;
   --kpi-ember-bg:   #dcfce7; --kpi-ember-fg:   #15803d;
   --kpi-kraft-bg:   #ffedd5; --kpi-kraft-fg:   #c2410c;
   --kpi-rose-bg:    #ffe4e6; --kpi-rose-fg:    #be123c;
 
-  /* Ancre visuelle fixe, ne s'inverse jamais avec le thème clair/sombre */
   --ink: #0f172a;
 }
 
@@ -95,7 +89,6 @@ body.logged-in #appContainer { display: flex; flex-direction: column; min-height
 .status-dot { position: absolute; bottom: -1px; right: -1px; width: 11px; height: 11px; border-radius: 50%; background: var(--kpi-ember-fg); border: 2px solid var(--surface); }
 .sidebar-footer .avatar { width: 36px; height: 36px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
 
-/* Bouton thème dans le footer */
 .theme-toggle-icon {
   display: flex;
   align-items: center;
@@ -187,8 +180,6 @@ input:focus, select:focus, .custom-select-trigger:focus { border-color: var(--ac
 .role-pill.role-interne { background: var(--kpi-ember-bg); color: var(--kpi-ember-fg); }
 .role-pill.role-externe { background: var(--kpi-kraft-bg); color: var(--kpi-kraft-fg); }
 
-/* ===== Ressources : formulaire d'ajout ===== */
-/* ===== Formulaires (utilisé par Ressources, Courses...) ===== */
 .form-stack { display: flex; flex-direction: column; gap: 18px; max-width: 640px; margin: 0 auto; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .form-field { display: flex; flex-direction: column; gap: 6px; }
@@ -196,7 +187,6 @@ input:focus, select:focus, .custom-select-trigger:focus { border-color: var(--ac
 .form-field input { width: 100%; }
 .form-actions { display: flex; justify-content: flex-end; padding-top: 4px; }
 
-/* ===== Courses : liste de suivi ===== */
 .course-list { display: flex; flex-direction: column; gap: 10px; }
 .course-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border); border-left: 4px solid var(--border); background: var(--surface-alt); transition: var(--transition); flex-wrap: wrap; }
 .course-item:hover { border-color: var(--accent); box-shadow: var(--shadow); }
@@ -211,15 +201,57 @@ input:focus, select:focus, .custom-select-trigger:focus { border-color: var(--ac
 .course-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
 .course-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
-.role-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-.role-option { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; transition: var(--transition); text-align: left; font-family: inherit; }
+/* --- Rôle picker (centrage) --- */
+.role-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  justify-items: center;
+  align-items: stretch;
+}
+.role-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  width: 100%;
+  min-height: 70px;
+}
 .role-option:hover { border-color: var(--accent); }
 .role-option.selected { border-color: var(--accent); background: var(--accent-glow); }
-.role-option-label { font-weight: 700; font-size: 0.85rem; color: var(--text); }
+.role-option-label { font-weight: 700; font-size: 0.85rem; color: var(--text); margin-bottom: 2px; }
 .role-option-desc { font-size: 0.72rem; color: var(--text-secondary); }
 
-/* ===== Ressources : fiches équipe ===== */
-.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+/* --- Ressources : sections par rôle --- */
+.team-section { margin-bottom: 30px; }
+.team-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.team-section-divider {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin: 0 0 16px 0;
+  opacity: 0.5;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
 .team-card { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface-alt); transition: var(--transition); }
 .team-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
 .team-card-top { display: flex; align-items: center; gap: 12px; }
@@ -251,7 +283,6 @@ tfoot td { font-weight: 700; border-top: 2px solid var(--border); border-bottom:
 
 .chart-container { position: relative; width: 100%; height: 250px; }
 
-/* ===== Messagerie : liste de conversations (style Telegram) ===== */
 .conv-list { display: flex; flex-direction: column; }
 .conv-item { display: flex; align-items: center; gap: 12px; padding: 12px 8px; cursor: pointer; border-radius: 12px; transition: background 0.15s; }
 .conv-item:hover { background: var(--bg); }
@@ -277,7 +308,6 @@ tfoot td { font-weight: 700; border-top: 2px solid var(--border); border-bottom:
 .empty-state i { font-size: 1.8rem; opacity: 0.4; }
 .empty-state span { font-size: 0.85rem; }
 
-/* ===== Messagerie : fenêtre de discussion (style WhatsApp/Telegram) ===== */
 .chat-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
 .chat-panel { width: min(440px, 100%); height: min(680px, 92vh); background: var(--surface); border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; }
 .chat-panel-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--ink); color: #fff; flex-shrink: 0; }
@@ -319,7 +349,6 @@ tfoot td { font-weight: 700; border-top: 2px solid var(--border); border-bottom:
 .fab-btn:hover { transform: scale(1.05); box-shadow: 0 12px 24px rgba(233, 69, 96, 0.5); }
 .fab-btn.hidden { display: none; }
 
-/* Styles pour le Bilan Financier */
 .bilan-card { position: relative; background: var(--surface); border-radius: var(--radius); padding: 28px 28px 32px 28px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
 .bilan-card::before {
   content: '';
@@ -347,7 +376,6 @@ tfoot td { font-weight: 700; border-top: 2px solid var(--border); border-bottom:
 .row-total .bilan-bar-track { display: none; }
 .bilan-footer { margin-top: 20px; font-size: 0.8rem; color: var(--text-secondary); text-align: right; border-top: 1px dashed var(--border); padding-top: 12px; }
 
-/* Barre de filtres période */
 .periode-toolbar { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
 .periode-toolbar-label { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; flex-shrink: 0; }
 .periode-btn-group { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 20px; }
