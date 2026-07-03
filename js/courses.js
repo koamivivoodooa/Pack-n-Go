@@ -66,9 +66,10 @@ export function refreshDashboard() {
       </div>
     `;
 
-    const myCourses = state.courses.filter(c => c.livreur === state.currentUser.name && c.date === today);
+    // ✅ CORRECTION : utiliser state.currentUser.username au lieu de .name
+    const myCourses = state.courses.filter(c => c.livreur === state.currentUser.username && c.date === today);
     const totalLivrees = myCourses.filter(c => c.statut === 'Livré').reduce((s, c) => s + (c.tarif || 0), 0);
-    const role = state.staff[state.currentUser.name]?.role || 'livreur_externe';
+    const role = state.staff[state.currentUser.username]?.role || 'livreur_externe';
     const partPack = role === 'livreur_packngo' ? Math.round(totalLivrees * 0.7) : Math.round(totalLivrees * 0.3);
     const gainLivreur = totalLivrees - partPack;
     const nbCoursesJour = myCourses.length;
@@ -166,7 +167,8 @@ export function refreshCourses() {
   let coursesToShow = state.courses.filter(c => c.date === today);
 
   if (isLivreur()) {
-    coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.name);
+    // ✅ CORRECTION : utiliser state.currentUser.username
+    coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.username);
   }
 
   let html = '<div class="course-list">';
