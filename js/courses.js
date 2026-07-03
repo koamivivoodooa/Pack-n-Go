@@ -1,6 +1,5 @@
 // ============================================================
 // courses.js — Courses, dashboard et comptabilité
-// (regroupés car ce sont 3 angles sur la même donnée `state.courses`)
 // ============================================================
 import { db, state } from './core.js';
 import { isAdmin, isLivreur } from './auth.js';
@@ -31,8 +30,7 @@ function courseItemHtml(c, { showEditDelete = false, allowQuickStatus = false } 
       </div>
     </div>`;
 }
-// `onUpdate` est fourni par main.js (= refreshAllUI) pour éviter que ce
-// module dépende de ui.js pour ça.
+
 export function listenCourses(onUpdate) {
   db.ref('courses').on('value', snap => {
     console.log('🔍 Nombre d’enfants dans le snapshot :', snap.numChildren());
@@ -56,6 +54,18 @@ export function refreshDashboard() {
   const today = now.toISOString().split('T')[0];
 
   if (isLivreur()) {
+    // --- Message de bienvenue (centré + titre) ---
+    const hour = new Date().getHours();
+    let greeting = '';
+    if (hour < 12) greeting = 'Bonjour';
+    else if (hour < 18) greeting = 'Bon après-midi';
+    else greeting = 'Bonsoir';
+    const welcomeHtml = `
+      <div class="title-font" style="padding: 8px 0 16px 0; font-size: 1.3rem; font-weight: 700; color: var(--text); text-align: center;">
+        ${greeting} ${state.currentUser.name} !
+      </div>
+    `;
+
     const myCourses = state.courses.filter(c => c.livreur === state.currentUser.name && c.date === today);
     const totalLivrees = myCourses.filter(c => c.statut === 'Livré').reduce((s, c) => s + (c.tarif || 0), 0);
     const role = state.staff[state.currentUser.name]?.role || 'livreur_externe';
@@ -64,14 +74,14 @@ export function refreshDashboard() {
     const nbCoursesJour = myCourses.length;
     const nbLivrees = myCourses.filter(c => c.statut === 'Livré').length;
 
-    document.getElementById('kpiGrid').innerHTML = `
+    document.getElementById('kpiGrid').innerHTML = welcomeHtml + `
       <div class="kpi-card"><div class="kpi-icon green"><i class="fas fa-wallet"></i></div><div><div class="kpi-value">${gainLivreur.toLocaleString()} F</div><div class="kpi-label">Mes gains du jour</div></div></div>
       <div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-box"></i></div><div><div class="kpi-value">${nbLivrees} / ${nbCoursesJour}</div><div class="kpi-label">Courses livrées / total</div></div></div>
     `;
 
     let coursesHtml = '';
     if (myCourses.length > 0) {
-      coursesHtml = '<div class="card"><div class="card-header"><h3><i class="fas fa-list"></i> Mes courses du jour</h3></div><div class="course-list">';
+      coursesHtml = '<div class="card"><div class="card-header"><h3 class="title-font"><i class="fas fa-list"></i> Mes courses du jour</h3></div><div class="course-list">';
       myCourses.forEach(c => { coursesHtml += courseItemHtml(c, { allowQuickStatus: true }); });
       coursesHtml += '</div></div>';
     } else {
@@ -79,7 +89,6 @@ export function refreshDashboard() {
     }
     document.getElementById('livreurCoursesList').innerHTML = coursesHtml;
   } else if (isAdmin()) {
-    // ✅ Déclaration de today en premier (correction)
     const today = new Date().toISOString().split('T')[0];
 
     const dayOfWeek = now.getDay();
@@ -136,7 +145,6 @@ export function refreshDashboard() {
       });
     }
 
-    // On réutilise la variable today déjà déclarée
     const dernieres = state.courses.filter(c => c.date === today).slice(0, 10);
 
     let html = '<div class="table-responsive"><table><thead><tr><th>Client</th><th>Livreur</th><th>Tarif</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
@@ -153,18 +161,14 @@ export function refreshDashboard() {
 export function refreshCourses() {
   if (!state.currentUser) return;
 
-  // Date du jour au format YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
 
-  // Filtrer d'abord par date du jour
   let coursesToShow = state.courses.filter(c => c.date === today);
 
-  // Si c'est un livreur, on filtre en plus par son nom
   if (isLivreur()) {
     coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.name);
   }
 
-  // Génération de l'affichage (le reste du code ne change pas)
   let html = '<div class="course-list">';
   coursesToShow.forEach(c => {
     html += courseItemHtml(c, { showEditDelete: isAdmin(), allowQuickStatus: isLivreur() });
