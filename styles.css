@@ -392,3 +392,8 @@ tfoot td { font-weight: 700; border-top: 2px solid var(--border); border-bottom:
   .grid-2 { grid-template-columns: 1fr; }
   .fab-btn { bottom: calc(var(--bottom-nav-height) + 16px); right: 16px; }
 }
+
+/* --- Police pour les titres (DM Serif Display) --- */
+.title-font {
+  font-family: 'DM Serif Display', serif;
+}
