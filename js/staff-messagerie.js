@@ -140,7 +140,8 @@ export function ouvrirChat(courseId) {
   if (!course) return;
 
   // 🔒 Vérification : un livreur ne peut ouvrir que ses propres conversations
-  if (isLivreur() && course.livreur !== state.currentUser.name) {
+  // ✅ CORRECTION : utiliser state.currentUser.username
+  if (isLivreur() && course.livreur !== state.currentUser.username) {
     toast("Vous n'avez pas accès à cette conversation", "error");
     return;
   }
@@ -252,7 +253,8 @@ export function refreshConversations() {
   // 🔒 Filtrer les courses selon le rôle
   let coursesToShow = state.courses;
   if (isLivreur()) {
-    coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.name);
+    // ✅ CORRECTION : utiliser state.currentUser.username
+    coursesToShow = coursesToShow.filter(c => c.livreur === state.currentUser.username);
   }
 
   const courseIds = [...new Set(coursesToShow.map(c => c.id))];
@@ -321,7 +323,8 @@ export function listenForUnreadMessages() {
   // 🔒 Filtrer les courses pour les livreurs
   let coursesToCheck = state.courses;
   if (isLivreur()) {
-    coursesToCheck = coursesToCheck.filter(c => c.livreur === state.currentUser.name);
+    // ✅ CORRECTION : utiliser state.currentUser.username
+    coursesToCheck = coursesToCheck.filter(c => c.livreur === state.currentUser.username);
   }
   coursesToCheck.forEach(c => {
     const lastMsg = state.lastMessages[c.id];
