@@ -1,15 +1,11 @@
 // ============================================================
 // staff-messagerie.js — Ressources humaines + messagerie
-// (deux petites features regroupées, chacune trop courte
-//  pour mériter son propre fichier)
 // ============================================================
 import { db, state } from './core.js';
 import { isAdminPrincipal, sha256 } from './auth.js';
 import { toast, openModal, populateSelect } from './ui.js';
 
 // ---------- Suivi de lecture des conversations ----------
-// Stocké en local (par appareil) plutôt que dans Firebase : suffisant
-// pour distinguer "lu / non lu" sans changer le schéma de données.
 function getLastRead(courseId) {
   return parseInt(localStorage.getItem(`png_read_${courseId}`) || '0', 10);
 }
@@ -30,6 +26,7 @@ export function listenStaff(onUpdate) {
 
 // ---------- Ressources Humaines ----------
 export function refreshStaffLists() {
+  // Mise à jour du selecteur de livreur pour la création de course
   const livreurOpts = [{ label: 'NON ASSIGNÉ', value: '' }];
   for (let u in state.staff) {
     if (state.staff[u].role?.startsWith('livreur')) {
@@ -39,34 +36,72 @@ export function refreshStaffLists() {
   }
   populateSelect('c_livreur_select', livreurOpts, '', 'NON ASSIGNÉ');
 
-  let html = '<div class="team-grid">';
+  // ---- Affichage de l'équipe par rôle ----
+  const grouped = {
+    admin: [],
+    gestionnaire: [],
+    livreur_packngo: [],
+    livreur_externe: [],
+    inconnu: []
+  };
+
   for (let u in state.staff) {
-    const nom = state.staff[u].nom || u;
     const role = state.staff[u].role || 'inconnu';
-    const roleMap = {
-      admin: { label: '🔑 Admin', cls: 'role-admin' },
-      gestionnaire: { label: '📋 Gestionnaire', cls: 'role-gestionnaire' },
-      livreur_packngo: { label: '🚀 Interne', cls: 'role-interne' },
-      livreur_externe: { label: '🏍️ Externe', cls: 'role-externe' }
-    };
-    const r = roleMap[role] || { label: role, cls: 'role-externe' };
-    html += `
-      <div class="team-card">
-        <div class="team-card-top">
-          <div class="team-card-avatar">${nom.charAt(0).toUpperCase()}</div>
-          <div>
-            <div class="team-card-name">${nom}</div>
-            <div class="team-card-user">@${u}</div>
-          </div>
-        </div>
-        <div class="team-card-footer">
-          <span class="role-pill ${r.cls}">${r.label}</span>
-          ${isAdminPrincipal() ? `<button class="btn btn-danger btn-sm" onclick="supprimerRH('${u}')"><i class="fas fa-trash"></i></button>` : ''}
-        </div>
-      </div>`;
+    if (grouped[role]) {
+      grouped[role].push({ username: u, ...state.staff[u] });
+    } else {
+      grouped.inconnu.push({ username: u, ...state.staff[u] });
+    }
   }
-  html += '</div>';
-  document.getElementById('listeRH').innerHTML = html === '<div class="team-grid"></div>' ? '<p style="color:var(--text-secondary);">Aucun membre.</p>' : html;
+
+  const roleLabels = {
+    admin: { label: '🔑 Administrateurs', cls: 'role-admin' },
+    gestionnaire: { label: '📋 Gestionnaires', cls: 'role-gestionnaire' },
+    livreur_packngo: { label: '🚀 Livreurs internes', cls: 'role-interne' },
+    livreur_externe: { label: '🏍️ Livreurs externes', cls: 'role-externe' },
+    inconnu: { label: '❓ Autres', cls: 'role-externe' }
+  };
+
+  let html = '';
+  const order = ['admin', 'gestionnaire', 'livreur_packngo', 'livreur_externe', 'inconnu'];
+  for (let roleKey of order) {
+    const members = grouped[roleKey];
+    if (members.length === 0) continue;
+
+    html += `
+      <div class="team-section">
+        <div class="team-section-title">${roleLabels[roleKey].label}</div>
+        <hr class="team-section-divider">
+        <div class="team-grid">
+    `;
+
+    members.forEach(m => {
+      const nom = m.nom || m.username;
+      const role = m.role || 'inconnu';
+      const r = roleLabels[role] || roleLabels.inconnu;
+      html += `
+        <div class="team-card">
+          <div class="team-card-top">
+            <div class="team-card-avatar">${nom.charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="team-card-name">${nom}</div>
+              <div class="team-card-user">@${m.username}</div>
+            </div>
+          </div>
+          <div class="team-card-footer">
+            <span class="role-pill ${r.cls}">${r.label.split(' ')[1] || r.label}</span>
+            ${isAdminPrincipal() ? `<button class="btn btn-danger btn-sm" onclick="supprimerRH('${m.username}')"><i class="fas fa-trash"></i></button>` : ''}
+          </div>
+        </div>`;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('listeRH').innerHTML = html || '<p style="color:var(--text-secondary);">Aucun membre.</p>';
 }
 
 export function ajouterRH() {
@@ -254,7 +289,6 @@ export function filterConversations() {
   refreshConversations();
 }
 
-// ---------- Badges non-lus ----------
 export function updateBadges() {
   const sideBadge = document.getElementById('msgBadgeSidebar');
   const bottomBadge = document.getElementById('msgBadgeBottom');
